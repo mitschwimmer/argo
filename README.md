@@ -39,28 +39,82 @@ disabled. Removing an entry from Git therefore does not automatically delete
 its live object. Child applications should make their own explicit pruning
 decision. There is no cascading-delete finalizer on the root.
 
-## Gateway API
+## Gateway API and Cilium networking
 
-The `gateway-api` child Application installs the seven **standard-channel**
-Gateway API v1.6.3 CRDs required by Cilium 1.20.4, directly from the pinned
-upstream Git tag, using server-side apply. It also manages the cluster-scoped
-`cilium` GatewayClass (`io.cilium/gateway-controller`), after the CRDs are
-created. The Cilium Gateway API implementation remains in the bootstrap
-HelmChart owned by `nix-config`; its chart is configured not to create the
-GatewayClass, avoiding competing reconcilers.
+### Ownership
 
-**Deployment order for existing clusters:** merge this repository's CRD change
-first, confirm the `gateway-api` Application is Synced/Healthy and all seven
-CRDs are Established, then activate the `nix-config` change that enables
-Cilium's `gatewayAPI.enabled`. Enabling Cilium before installing the CRDs
-leaves its gateway controller disabled until the operator restarts.
+`nix-config` owns **only the bootstrap Cilium HelmChart**, installed by
+cp-01's K3s Helm Controller. Its Helm values define the API VIP, CNI paths,
+native routing, kube-proxy replacement and Kubernetes IPAM so networking
+works **before Argo CD starts**.
 
-On a **fresh rebuild**, Cilium necessarily boots before Argo CD. Once Argo
-has installed the Gateway API CRDs, restart **only** the Cilium operator to
-re-run its startup-time CRD discovery:
+This repository does not create another Cilium Helm release. Argo owns the
+`HelmChartConfig/cilium` resource in `kube-system`, which overrides optional
+values in the **same K3s-owned release**: Gateway API, standalone Envoy,
+L2 announcements, `lan0` device selection and API client rate limits.
+Both Helm resources share the name `cilium` and namespace `kube-system`.
+The override uses `failurePolicy: abort` to preserve the bootstrap chart's
+non-destructive failure policy. A chart upgrade triggered by this resource
+can still affect core cluster networking; review its diffs carefully.
+
+Two child Applications divide independently managed resources:
+
+- `gateway-api` installs the seven **standard** Gateway API v1.6.3 CRDs
+  required by Cilium 1.20.4, pinned to upstream Git and applied server-side.
+  Its local source also manages the Cilium `HelmChartConfig` and the
+  `cilium` GatewayClass (`io.cilium/gateway-controller`). Cilium's chart
+  has `gatewayClass.create: false` to prevent duplicate ownership.
+- `cilium-networking` declares Cilium's `CiliumLoadBalancerIPPool` and
+  `CiliumL2AnnouncementPolicy` custom resources, **not** its DaemonSet
+  or HelmChart.
+
+### Startup and ordering
+
+Argo's `gateway-api` Application applies CRDs at wave 0, then the
+`HelmChartConfig` at wave 1, then `GatewayClass/cilium` at wave 2. Argo
+waits for resource health between waves. This works on a fresh cluster
+where Cilium must start first: it boots with Gateway API disabled, Argo
+installs the definitions, then K3s upgrades the existing Cilium release
+when the Argo-managed override arrives. The upgrade should roll the
+Cilium operator onto Gateway API support; confirm that with live checks.
+No one-time manual operator restart is part of the intended normal path.
+
+The root Application uses `prune: false`. Removing a `HelmChartConfig`
+file from Git therefore **does not** automatically delete the live
+override. Treat changes or removal as a networking operation. If an
+override disrupts Cilium, use K3s control-plane access to inspect the
+`HelmChart` and `HelmChartConfig`; revert the bad values in Git. If
+Argo is unavailable, ensure its automated reconciliation will not
+recreate the faulty resource before removing the live override. The
+bootstrap HelmChart in `nix-config` remains the recovery baseline.
+Do **not** delete or duplicate the bootstrap `HelmChart/cilium`.
+
+### LAN IP allocation and announcements
+
+`CiliumLoadBalancerIPPool/lan-gateways` is enabled for the reserved
+`192.168.1.201-192.168.1.220` block (20 addresses). The router's DHCP
+scope ends at `192.168.1.200`, and the network operator confirmed
+addresses above that were free. Keep these twenty IPs out of DHCP
+expansions, static device assignments and other load balancer pools.
+The Kubernetes API VIP `192.168.1.110` is separate.
+
+Only Services created by Cilium Gateways are eligible for allocation and
+announcement, selected via `gateway.networking.k8s.io/gateway-name`.
+`CiliumL2AnnouncementPolicy/gateway-services` announces LoadBalancer IPs
+over `lan0` from `k8s-cp-01`, `k8s-cp-03` or `k8s-worker-02`
+(the small, tainted cp-02 is excluded). A Kubernetes Lease elects a single
+announcer for each Service. This is L2 VIP failover, not application
+replication; the feature is still beta upstream. Gateway Services use
+`externalTrafficPolicy: Cluster`, which is compatible with L2
+announcements.
+
+No Gateway, HTTPRoute, DNS name or listener is created yet, so enabling
+these resources does **not** expose an application to the LAN.
+
+After merging, on a K3s server verify:
 
 ```sh
-k3s kubectl -n argocd get application gateway-api
+k3s kubectl -n argocd get applications gateway-api cilium-networking
 k3s kubectl wait --for=condition=Established --timeout=300s \
   crd/gatewayclasses.gateway.networking.k8s.io \
   crd/gateways.gateway.networking.k8s.io \
@@ -69,64 +123,17 @@ k3s kubectl wait --for=condition=Established --timeout=300s \
   crd/backendtlspolicies.gateway.networking.k8s.io \
   crd/referencegrants.gateway.networking.k8s.io \
   crd/tlsroutes.gateway.networking.k8s.io
-k3s kubectl -n kube-system rollout restart deployment/cilium-operator
-k3s kubectl -n kube-system rollout status deployment/cilium-operator
-k3s kubectl get gatewayclass cilium
-```
-
-Verify the `cilium` GatewayClass has the `Accepted=True` status condition.
-Do not treat creation of CRDs or the class alone as proof that routes work.
-
-This Application defines the APIs and class but creates no Gateway, route,
-Service or DNS record. Cilium's Gateway traffic exposure is configured in the
-separate `cilium-networking` Application described below; it uses LB-IPAM
-and LAN L2 announcements, not K3s ServiceLB (which is disabled).
-
-## Cilium LB-IPAM and LAN announcements
-
-The `cilium-networking` Application manages **only** Cilium networking CRs.
-It does not install Cilium; the cp-01 K3s HelmChart in `nix-config` keeps
-owning the CNI, Gateway API controller, and L2 announcement feature flags.
-
-- `CiliumLoadBalancerIPPool/lan-gateways` selects Services generated by
-  Cilium Gateways using the `gateway.networking.k8s.io/gateway-name` label.
-- `CiliumL2AnnouncementPolicy/gateway-services` advertises only selected
-  LoadBalancer IPs over `lan0` (not arbitrary ExternalIPs).
-- Only `k8s-cp-01`, `k8s-cp-03`, and `k8s-worker-02` compete to announce
-  each Service IP; the small/tainted `k8s-cp-02` is excluded. L2
-  announcements use Kubernetes Leases to elect a single announcer per Service.
-
-**IP allocation is enabled for Gateway Services only.** The router's
-DHCP range ends at `192.168.1.200`; the operator confirmed all addresses
-above `.200` were free. This pool reserves `192.168.1.201-192.168.1.220`
-(20 addresses) for Cilium Gateway LoadBalancer Services. Keep that block
-excluded from any future router DHCP expansion, static host addresses or
-other IP allocators. The Kubernetes API VIP `192.168.1.110` is outside
-this range and must remain separate. Changing an IP pool later can
-reassign Service IPs and disrupt clients.
-
-With an enabled pool, the Cilium Gateway controller creates a
-`LoadBalancer` Service for a Gateway. LB-IPAM assigns a matching free address;
-the L2 policy lets elected nodes answer ARP requests for that address on the
-bridged LAN. No Gateway listener, DNS name, or HTTPRoute is deployed by this
-change. The Cilium L2 implementation is still marked **beta** upstream; verify
-actual ARP reachability and failover from another LAN machine.
-
-Check prerequisites and status from cp-01:
-
-```sh
-k3s kubectl -n kube-system get ds/cilium deploy/cilium-operator
-k3s kubectl -n argocd get application cilium-networking
+k3s kubectl -n kube-system get helmchart cilium
+k3s kubectl -n kube-system get helmchartconfig cilium -o yaml
+k3s kubectl -n kube-system rollout status deployment/cilium-operator --timeout=300s
+k3s kubectl wait --for=condition=Accepted gatewayclass/cilium --timeout=300s
 k3s kubectl get ciliumloadbalancerippools,ciliuml2announcementpolicies
-k3s kubectl get ciliumloadbalancerippool lan-gateways -o yaml
 ```
 
-After creating a Gateway, inspect `kubectl get svc -A` and
-`kubectl -n kube-system get leases | grep cilium-l2announce`. Confirm that
-the generated Service receives an IP in the reserved block, the elected
-node answers ARP for that IP, routes work, and the Service remains reachable
-after the announcer changes. LAN switches and router DHCP reservations
-are outside these repositories.
+Once a Gateway and HTTPRoute are added, check that its generated
+LoadBalancer Service receives an address from the reserved block, another
+LAN host can reach it over ARP and HTTP, and it remains reachable after
+a controlled announcer failover. Do not disrupt etcd to test L2 failover.
 
 ## Storage
 

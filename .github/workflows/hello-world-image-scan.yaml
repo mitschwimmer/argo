@@ -28,6 +28,8 @@ jobs:
         with:
           image-ref: cgr.dev/chainguard/nginx:latest
           scan-type: image
+          version: v0.76.2
+          scanners: vuln
           format: table
           exit-code: "1"
           vuln-type: os,library

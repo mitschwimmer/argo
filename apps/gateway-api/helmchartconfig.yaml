@@ -21,6 +21,9 @@ spec:
         create: false
       # L2 announcements cannot be used with externalTrafficPolicy: Local.
       externalTrafficPolicy: Cluster
+    # The Envoy DaemonSet is part of the same Cilium Helm release.
+    envoy:
+      enabled: true
     l2announcements:
       enabled: true
     # All K3s MicroVMs use a bridged interface named lan0.

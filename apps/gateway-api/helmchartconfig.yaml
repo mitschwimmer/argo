@@ -1,0 +1,41 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: cilium
+  namespace: kube-system
+  annotations:
+    # Gateway API CRDs are installed in wave 0. Apply this only afterwards,
+    # so the K3s Helm Controller upgrades Cilium with those CRDs available.
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  # Match the bootstrap HelmChart's abort policy: never reinstall the CNI
+  # automatically after a failed network chart upgrade.
+  failurePolicy: abort
+  valuesContent: |
+    # The bootstrap HelmChart and release remain owned by K3s/nix-config.
+    # These non-bootstrap networking features are owned by Argo CD.
+    gatewayAPI:
+      enabled: true
+      # Avoid competing with the GatewayClass managed in this Application.
+      gatewayClass:
+        create: false
+      # L2 announcements cannot be used with externalTrafficPolicy: Local.
+      externalTrafficPolicy: Cluster
+    # The Envoy DaemonSet is part of the same Cilium Helm release.
+    envoy:
+      enabled: true
+    l2announcements:
+      enabled: true
+    # All K3s MicroVMs use a bridged interface named lan0.
+    # The Cilium 1.20.4 Helm chart expects a comma-separated string.
+    devices: "lan0"
+    # The chart defaults to NOT restarting agents/operators on ConfigMap
+    # changes. These settings make the gateway and L2 feature activation
+    # effective on a fresh cluster without manual rollout restarts.
+    rollOutCiliumPods: true
+    operator:
+      rollOutPods: true
+    # L2 announcers renew a Kubernetes Lease per advertised Service.
+    k8sClientRateLimit:
+      qps: 50
+      burst: 100

@@ -14,16 +14,22 @@ spec:
         app: hello-world
     spec:
       automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: hello-world
-          image: hashicorp/http-echo:1.0.0
-          imagePullPolicy: IfNotPresent
-          args:
-            - -listen=:5678
-            - -text=hello from hello.archaic.work
+          # Minimal, shell-less, non-root image; the free image is frequently rebuilt.
+          # Always pull on Pod creation so new Pods receive security updates.
+          # CI scans the same image reference for all known CVE severities.
+          image: cgr.dev/chainguard/nginx:latest
+          imagePullPolicy: Always
           ports:
             - name: http
-              containerPort: 5678
+              containerPort: 8080
           readinessProbe:
             httpGet:
               path: /
@@ -37,12 +43,33 @@ spec:
           resources:
             requests:
               cpu: 10m
-              memory: 16Mi
+              memory: 32Mi
             limits:
-              memory: 64Mi
+              memory: 96Mi
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
+          volumeMounts:
+            - name: site
+              mountPath: /usr/share/nginx/html
+              readOnly: true
+            # nginx needs writable locations even when the root is read-only.
+            - name: run
+              mountPath: /run
+            - name: nginx-tmp
+              mountPath: /var/lib/nginx/tmp
+      volumes:
+        - name: site
+          configMap:
+            name: hello-world
+        - name: run
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Mi
+        - name: nginx-tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Mi

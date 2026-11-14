@@ -7,7 +7,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: Disposable HTTP echo workload attached to the public HTTPS Gateway.
+  description: Disposable static web workload attached to the public HTTPS Gateway.
   sourceRepos:
     - https://github.com/mitschwimmer/argo.git
   destinations:
@@ -19,6 +19,8 @@ spec:
   namespaceResourceWhitelist:
     - group: apps
       kind: Deployment
+    - group: ""
+      kind: ConfigMap
     - group: ""
       kind: Service
     - group: gateway.networking.k8s.io

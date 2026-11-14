@@ -1,0 +1,35 @@
+name: Scan public hello-world image
+
+on:
+  pull_request:
+    paths:
+      - apps/hello-world/deployment.yaml
+      - .github/workflows/hello-world-image-scan.yaml
+  push:
+    branches:
+      - main
+    paths:
+      - apps/hello-world/deployment.yaml
+      - .github/workflows/hello-world-image-scan.yaml
+  schedule:
+    # The image is rebuilt regularly; check for newly disclosed vulnerabilities.
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vulnerabilities:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Scan nginx runtime image (all known CVE severities)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: cgr.dev/chainguard/nginx:latest
+          scan-type: image
+          format: table
+          exit-code: "1"
+          vuln-type: os,library
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: false

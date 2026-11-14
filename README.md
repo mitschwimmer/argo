@@ -77,11 +77,10 @@ k3s kubectl get gatewayclass cilium
 Verify the `cilium` GatewayClass has the `Accepted=True` status condition.
 Do not treat creation of CRDs or the class alone as proof that routes work.
 
-No Gateway, route, public IP, or DNS record is created here. By default Cilium
-creates LoadBalancer Services for Gateway objects; K3s ServiceLB is disabled
-and no Cilium LB-IPAM pool or L2 announcements are configured. Choose and
-review gateway exposure separately (LB-IPAM plus L2 announcements, or host
-networking) before deploying a reachable Gateway.
+This Application defines the APIs and class but creates no Gateway, route,
+Service or DNS record. Cilium's Gateway traffic exposure is configured in the
+separate `cilium-networking` Application described below; it uses LB-IPAM
+and LAN L2 announcements, not K3s ServiceLB (which is disabled).
 
 ## Cilium LB-IPAM and LAN announcements
 
@@ -97,15 +96,14 @@ owning the CNI, Gateway API controller, and L2 announcement feature flags.
   each Service IP; the small/tainted `k8s-cp-02` is excluded. L2
   announcements use Kubernetes Leases to elect a single announcer per Service.
 
-**IP allocation is intentionally NOT active yet.** The pool is declared with
-`disabled: true` and a `192.0.2.240-192.0.2.247` TEST-NET-1 placeholder.
-This is documentation-only address space, **not** an acceptable LAN pool.
-Do not flip `disabled` until a range in `192.168.1.0/24` is explicitly
-reserved outside the router's DHCP scope and checked against every static
-address, physical host, guest lease, and the Kubernetes API VIP
-`192.168.1.110`. Change the `blocks` range and `disabled` together in
-a reviewed commit. Avoid overlapping any other Cilium pool. A pool update can
-reassign Service IPs; treat later range changes as disruptive.
+**IP allocation is enabled for Gateway Services only.** The router's
+DHCP range ends at `192.168.1.200`; the operator confirmed all addresses
+above `.200` were free. This pool reserves `192.168.1.201-192.168.1.220`
+(20 addresses) for Cilium Gateway LoadBalancer Services. Keep that block
+excluded from any future router DHCP expansion, static host addresses or
+other IP allocators. The Kubernetes API VIP `192.168.1.110` is outside
+this range and must remain separate. Changing an IP pool later can
+reassign Service IPs and disrupt clients.
 
 With an enabled pool, the Cilium Gateway controller creates a
 `LoadBalancer` Service for a Gateway. LB-IPAM assigns a matching free address;
@@ -123,12 +121,12 @@ k3s kubectl get ciliumloadbalancerippools,ciliuml2announcementpolicies
 k3s kubectl get ciliumloadbalancerippool lan-gateways -o yaml
 ```
 
-After a verified LAN range is enabled and a Gateway has been created, also
-inspect `kubectl get svc -A` and
+After creating a Gateway, inspect `kubectl get svc -A` and
 `kubectl -n kube-system get leases | grep cilium-l2announce`. Confirm that
-the elected node owns ARP for the Service IP, routes work, and the service
-remains reachable after the announcer changes. LAN switches and router DHCP
-reservations are outside these repositories.
+the generated Service receives an IP in the reserved block, the elected
+node answers ARP for that IP, routes work, and the Service remains reachable
+after the announcer changes. LAN switches and router DHCP reservations
+are outside these repositories.
 
 ## Storage
 

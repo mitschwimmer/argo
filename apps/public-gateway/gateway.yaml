@@ -1,0 +1,39 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: public
+  namespace: edge
+  annotations:
+    # cert-manager creates and renews the Certificate in the edge namespace.
+    cert-manager.io/cluster-issuer: letsencrypt-production
+spec:
+  gatewayClassName: cilium
+  # Stable LAN destination for home-router TCP 80/443 forwarding.
+  addresses:
+    - type: IPAddress
+      value: 192.168.1.201
+  listeners:
+    - name: http
+      hostname: hello.archaic.work
+      port: 80
+      protocol: HTTP
+      # ACME creates its temporary solver HTTPRoute in edge.
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https
+      hostname: hello.archaic.work
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: hello-archaic-work-tls
+      # Only opt-in namespaces may attach application routes.
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway-access: public

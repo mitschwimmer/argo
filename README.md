@@ -39,6 +39,50 @@ disabled. Removing an entry from Git therefore does not automatically delete
 its live object. Child applications should make their own explicit pruning
 decision. There is no cascading-delete finalizer on the root.
 
+## Gateway API
+
+The `gateway-api` child Application installs the seven **standard-channel**
+Gateway API v1.6.3 CRDs required by Cilium 1.20.4, directly from the pinned
+upstream Git tag, using server-side apply. It also manages the cluster-scoped
+`cilium` GatewayClass (`io.cilium/gateway-controller`), after the CRDs are
+created. The Cilium Gateway API implementation remains in the bootstrap
+HelmChart owned by `nix-config`; its chart is configured not to create the
+GatewayClass, avoiding competing reconcilers.
+
+**Deployment order for existing clusters:** merge this repository's CRD change
+first, confirm the `gateway-api` Application is Synced/Healthy and all seven
+CRDs are Established, then activate the `nix-config` change that enables
+Cilium's `gatewayAPI.enabled`. Enabling Cilium before installing the CRDs
+leaves its gateway controller disabled until the operator restarts.
+
+On a **fresh rebuild**, Cilium necessarily boots before Argo CD. Once Argo
+has installed the Gateway API CRDs, restart **only** the Cilium operator to
+re-run its startup-time CRD discovery:
+
+```sh
+k3s kubectl -n argocd get application gateway-api
+k3s kubectl wait --for=condition=Established --timeout=300s \
+  crd/gatewayclasses.gateway.networking.k8s.io \
+  crd/gateways.gateway.networking.k8s.io \
+  crd/httproutes.gateway.networking.k8s.io \
+  crd/grpcroutes.gateway.networking.k8s.io \
+  crd/backendtlspolicies.gateway.networking.k8s.io \
+  crd/referencegrants.gateway.networking.k8s.io \
+  crd/tlsroutes.gateway.networking.k8s.io
+k3s kubectl -n kube-system rollout restart deployment/cilium-operator
+k3s kubectl -n kube-system rollout status deployment/cilium-operator
+k3s kubectl get gatewayclass cilium
+```
+
+Verify the `cilium` GatewayClass has the `Accepted=True` status condition.
+Do not treat creation of CRDs or the class alone as proof that routes work.
+
+No Gateway, route, public IP, or DNS record is created here. By default Cilium
+creates LoadBalancer Services for Gateway objects; K3s ServiceLB is disabled
+and no Cilium LB-IPAM pool or L2 announcements are configured. Choose and
+review gateway exposure separately (LB-IPAM plus L2 announcements, or host
+networking) before deploying a reachable Gateway.
+
 ## Storage
 
 The `openebs` child Application installs the pinned OpenEBS

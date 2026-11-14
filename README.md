@@ -56,3 +56,12 @@ kubectl kustomize clusters/homelab
 Render before merging and inspect the actual resource set. Do not use
 `kubectl apply` for routine changes after the one-time root bootstrap; commit
 those desired changes here instead. Manual changes are reconciled back to Git.
+
+## Staged API endpoint
+
+`clusters/homelab/kube-apiserver.yaml` registers a **manual-sync** child
+Application. It will not make the API reachable until a LAN VIP is reserved,
+the K3s-owned Cilium HelmChart is prepared in `nix-config`, all server TLS
+SANs are correct, and a scoped Cilium LB IP pool is added. Follow
+[the API VIP runbook](apps/kube-apiserver/README.md); do not sync the child
+as part of root bootstrap.

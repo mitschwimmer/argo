@@ -1,0 +1,39 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: kube-apiserver-vip
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: A LAN-facing Cilium L2 API Service with ready local K3s relays.
+  sourceRepos:
+    - https://github.com/mitschwimmer/argo.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: kube-system
+  clusterResourceWhitelist:
+    - group: cilium.io
+      kind: CiliumL2AnnouncementPolicy
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: Service
+    - group: apps
+      kind: DaemonSet
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-apiserver-vip
+  namespace: argocd
+spec:
+  project: kube-apiserver-vip
+  source:
+    repoURL: https://github.com/mitschwimmer/argo.git
+    targetRevision: main
+    path: apps/kube-apiserver
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  # Manual sync until Cilium and TLS prerequisites are verified.

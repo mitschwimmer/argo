@@ -1,0 +1,12 @@
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: kube-apiserver-vip
+spec:
+  serviceSelector:
+    matchLabels:
+      app.kubernetes.io/name: kube-apiserver-vip
+  interfaces:
+    - ^lan0$
+  externalIPs: false
+  loadBalancerIPs: true

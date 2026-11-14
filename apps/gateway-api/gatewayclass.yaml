@@ -3,6 +3,6 @@ kind: GatewayClass
 metadata:
   name: cilium
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   controllerName: io.cilium/gateway-controller

@@ -29,6 +29,12 @@ spec:
     # All K3s MicroVMs use a bridged interface named lan0.
     # The Cilium 1.20.4 Helm chart expects a comma-separated string.
     devices: "lan0"
+    # The chart defaults to NOT restarting agents/operators on ConfigMap
+    # changes. These settings make the gateway and L2 feature activation
+    # effective on a fresh cluster without manual rollout restarts.
+    rollOutCiliumPods: true
+    operator:
+      rollOutPods: true
     # L2 announcers renew a Kubernetes Lease per advertised Service.
     k8sClientRateLimit:
       qps: 50

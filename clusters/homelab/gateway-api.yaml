@@ -7,19 +7,21 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: Manage upstream Gateway API definitions and the Cilium GatewayClass.
+  description: Manage Gateway API CRDs, Cilium HelmChartConfig and GatewayClass.
   sourceRepos:
     - https://github.com/kubernetes-sigs/gateway-api.git
     - https://github.com/mitschwimmer/argo.git
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: argocd
+      namespace: kube-system
   clusterResourceWhitelist:
     - group: apiextensions.k8s.io
       kind: CustomResourceDefinition
     - group: gateway.networking.k8s.io
       kind: GatewayClass
-  namespaceResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: helm.cattle.io
+      kind: HelmChartConfig
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -36,14 +38,14 @@ spec:
       path: config/crd/standard
       directory:
         include: '{gateway.networking.k8s.io_gatewayclasses.yaml,gateway.networking.k8s.io_gateways.yaml,gateway.networking.k8s.io_httproutes.yaml,gateway.networking.k8s.io_grpcroutes.yaml,gateway.networking.k8s.io_backendtlspolicies.yaml,gateway.networking.k8s.io_referencegrants.yaml,gateway.networking.k8s.io_tlsroutes.yaml}'
-    # Manage GatewayClass here rather than from Cilium's bootstrap HelmChart.
-    # This also works during fresh rebuilds when Cilium starts before the CRDs.
+    # Manage the Cilium HelmChartConfig and GatewayClass after the CRDs.
+    # K3s still owns the bootstrap HelmChart and the installed Helm release.
     - repoURL: https://github.com/mitschwimmer/argo.git
       targetRevision: main
       path: apps/gateway-api
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: kube-system
   syncPolicy:
     automated:
       enabled: true

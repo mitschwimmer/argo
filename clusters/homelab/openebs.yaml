@@ -1,0 +1,63 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: openebs
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Manage the OpenEBS Local PV Hostpath provisioner.
+  sourceRepos:
+    - https://openebs.github.io/dynamic-localpv-provisioner
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: openebs
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: storage.k8s.io
+      kind: StorageClass
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openebs
+  namespace: argocd
+spec:
+  project: openebs
+  source:
+    repoURL: https://openebs.github.io/dynamic-localpv-provisioner
+    chart: localpv-provisioner
+    targetRevision: 4.6.0
+    helm:
+      releaseName: openebs
+      valuesObject:
+        analytics:
+          enabled: false
+        localpv:
+          basePath: /var/openebs/local
+        hostpathClass:
+          enabled: true
+          isDefaultClass: true
+          reclaimPolicy: Delete
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openebs
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: false
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true

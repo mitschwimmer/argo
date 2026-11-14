@@ -52,6 +52,9 @@ This repository does not create another Cilium Helm release. Argo owns the
 `HelmChartConfig/cilium` resource in `kube-system`, which overrides optional
 values in the **same K3s-owned release**: Gateway API, standalone Envoy,
 L2 announcements, `lan0` device selection and API client rate limits.
+Its `operator.rollOutPods` and `rollOutCiliumPods` options explicitly
+restart the operator and agent Pods on Cilium ConfigMap changes (both
+options default to `false` in Cilium 1.20.4).
 Both Helm resources share the name `cilium` and namespace `kube-system`.
 The override uses `failurePolicy: abort` to preserve the bootstrap chart's
 non-destructive failure policy. A chart upgrade triggered by this resource
@@ -75,8 +78,8 @@ Argo's `gateway-api` Application applies CRDs at wave 0, then the
 waits for resource health between waves. This works on a fresh cluster
 where Cilium must start first: it boots with Gateway API disabled, Argo
 installs the definitions, then K3s upgrades the existing Cilium release
-when the Argo-managed override arrives. The upgrade should roll the
-Cilium operator onto Gateway API support; confirm that with live checks.
+when the Argo-managed override arrives. The chart upgrade and checksum-based Pod-template updates roll the
+Cilium operator and agent onto the new features; confirm that with live checks.
 No one-time manual operator restart is part of the intended normal path.
 
 The root Application uses `prune: false`. Removing a `HelmChartConfig`

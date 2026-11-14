@@ -1,0 +1,23 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-production
+  annotations:
+    # Install cert-manager's CRDs and webhook before creating the issuer.
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  acme:
+    # ACME contact email is optional; add a monitored email if desired.
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-production-account-key
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            # No node-facing NodePort is needed for solver Pods.
+            serviceType: ClusterIP
+            parentRefs:
+              - name: public
+                namespace: edge
+                kind: Gateway
+                sectionName: http

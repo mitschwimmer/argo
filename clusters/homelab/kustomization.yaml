@@ -4,3 +4,4 @@ resources:
   - bootstrap.yaml
   - openebs.yaml
   - gateway-api.yaml
+  - cilium-networking.yaml

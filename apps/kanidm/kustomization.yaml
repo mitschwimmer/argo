@@ -7,3 +7,14 @@ resources:
   - kanidm.yaml
   - person-henner.yaml
   - group-walter-users.yaml
+
+# Generate a hashed name whenever the theme changes. A custom nameReference
+# rule updates the ConfigMap reference inside Kaniop's Kanidm CRD.
+configMapGenerator:
+  - name: kanidm-nothing-theme
+    namespace: kanidm
+    files:
+      - override.css=override.css
+
+configurations:
+  - kustomizeconfig.yaml

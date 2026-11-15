@@ -10,6 +10,7 @@ spec:
   hostnames:
     - hello.archaic.work
     - auth.archaic.work
+    - seal.archaic.work
     - walter.archaic.work
   rules:
     # cert-manager's Exact ACME challenge path takes precedence over this prefix.

@@ -7,4 +7,4 @@ resources:
   - deployment.yaml
   - service.yaml
   - httproute.yaml
-  # Add strata-sealedsecret.yaml here after generating it with kubeseal.
+  - strata-sealedsecret.yaml

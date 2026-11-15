@@ -4,37 +4,18 @@ This directory declares Walter on the existing public Cilium Gateway at
 https://walter.archaic.work. Walter's source and operational contract:
 https://github.com/mitschwimmer/walter/blob/main/.agents/skills/walter/references/operations.md
 
-## Before merging this draft PR
+## Deployment prerequisites and operations
 
-1. **Strata API key:** Seal a dedicated key using the **current cluster's**
-   Sealed Secrets public certificate. The repository is public; never commit
-   a plaintext Secret, key, credentials file or unencrypted pipeline log.
-
-   On a K3s server with kubeseal installed, you can fetch the public
-   certificate (adapt KUBECONFIG for your environment):
-
-   ```sh
-   sudo env KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubeseal \
-     --controller-name sealed-secrets-controller \
-     --controller-namespace sealed-secrets --fetch-cert > sealed-secrets.pem
-   ```
-
-   From an argo checkout with k3s kubectl and a key file readable only by you:
-
-   ```sh
-   k3s kubectl -n walter create secret generic walter-strata-api-key \
-     --from-file=api-key=/secure/path/to/strata-api-key \
-     --dry-run=client -o yaml | \
-     kubeseal --cert sealed-secrets.pem --format yaml \
-     > apps/walter/strata-sealedsecret.yaml
-   ```
-
-   Check the resulting SealedSecret is named `walter-strata-api-key` in
-   namespace `walter`, with an encrypted `api-key`. Add
-   `strata-sealedsecret.yaml` to the resources in
-   `apps/walter/kustomization.yaml` and commit it to the PR. Use the
-   exact same Secret name and namespace when resealing. Avoid keeping the
-   private key file on shared hosts.
+1. **Strata API key:** The encrypted `strata-sealedsecret.yaml`
+   is committed and included in the Kustomization. It creates
+   `walter/walter-strata-api-key` (key `api-key`) when the current
+   cluster's Sealed Secrets controller decrypts it. The sealing
+   certificate is available at
+   `https://seal.archaic.work/v1/cert.pem`.
+   Never commit the plaintext key or an unencrypted Kubernetes Secret.
+   Ensure the running Strata server accepts the sealed key. Preserve
+   the controller's private sealing keys in encrypted off-cluster
+   backups and test recovery.
 
 2. **DNS:** Point the public A record for `walter.archaic.work` to the
    same external address used for `auth.archaic.work`. The existing

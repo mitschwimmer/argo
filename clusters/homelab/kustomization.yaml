@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - bootstrap.yaml
   - openebs.yaml
+  - sealed-secrets.yaml
   - gateway-api.yaml
   - cilium-networking.yaml
   - cert-manager.yaml

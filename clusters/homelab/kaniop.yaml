@@ -1,0 +1,64 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: kaniop
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Manage the Kaniop controller.
+  sourceRepos:
+    - https://github.com/pando85/kaniop.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: kaniop
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+    - group: batch
+      kind: Job
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kaniop
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: kaniop
+  source:
+    repoURL: https://github.com/pando85/kaniop.git
+    targetRevision: v0.22.1
+    path: charts/kaniop
+    helm:
+      releaseName: kaniop
+      valuesObject:
+        # Upstream chart hook applies its CRDs during install/upgrade.
+        crdApply:
+          enabled: true
+        webhook:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kaniop
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: false
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

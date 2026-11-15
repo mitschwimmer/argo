@@ -14,7 +14,7 @@ spec:
       value: 192.168.1.201
   listeners:
     - name: http
-      # HTTP-01 challenges and redirects for both hostnames.
+      # HTTP-01 challenges and redirects for all public hostnames.
       port: 80
       protocol: HTTP
       # ACME solver HTTPRoutes may attach from opt-in namespaces.
@@ -55,3 +55,20 @@ spec:
           selector:
             matchLabels:
               gateway-access: public
+    - name: https-seal
+      hostname: seal.archaic.work
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: seal-archaic-work-tls
+      # Only HTTPRoutes in the Sealed Secrets namespace may attach here.
+      # The built-in namespace name label avoids modifying the Helm-owned Namespace.
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: sealed-secrets

@@ -1,0 +1,42 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: sealing-certificate
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Publish only the Sealed Secrets public certificate over HTTPS.
+  sourceRepos:
+    - https://github.com/mitschwimmer/argo.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: sealed-secrets
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sealing-certificate
+  namespace: argocd
+spec:
+  project: sealing-certificate
+  source:
+    repoURL: https://github.com/mitschwimmer/argo.git
+    targetRevision: main
+    path: apps/sealing-certificate
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sealed-secrets
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: true
+      allowEmpty: false
+    syncOptions:
+      - SkipDryRunOnMissingResource=true

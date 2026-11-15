@@ -4,6 +4,7 @@ resources:
   - bootstrap.yaml
   - openebs.yaml
   - sealed-secrets.yaml
+  - sealing-certificate.yaml
   - kaniop.yaml
   - kanidm.yaml
   - gateway-api.yaml

@@ -1,0 +1,180 @@
+/*
+ * Nothing OS-inspired Kanidm appearance.
+ * Pure CSS: no modified authentication markup, JavaScript or external assets.
+ * Initial target: Kanidm 1.11.2 (as pinned in this repository).
+ */
+:root,
+[data-bs-theme="light"],
+[data-bs-theme="dark"] {
+  color-scheme: dark;
+  --nothing-red: #d71920;
+  --nothing-red-hover: #b91119;
+  --nothing-ink: #0d0d0d;
+  --nothing-panel: #171717;
+  --nothing-line: #363636;
+  --bs-body-bg: var(--nothing-ink);
+  --bs-body-color: #f5f5f5;
+  --bs-body-color-rgb: 245, 245, 245;
+  --bs-secondary-color: #ababab;
+  --bs-secondary-bg: #222;
+  --bs-tertiary-bg: #191919;
+  --bs-emphasis-color: #fff;
+  --bs-border-color: var(--nothing-line);
+  --bs-primary: var(--nothing-red);
+  --bs-primary-rgb: 215, 25, 32;
+  --bs-link-color: #f5f5f5;
+  --bs-link-hover-color: #ff6066;
+  --bs-focus-ring-color: rgba(215, 25, 32, 0.38);
+}
+
+html { background: var(--nothing-ink); }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background-color: var(--nothing-ink);
+  background-image: radial-gradient(#ffffff18 0.7px, transparent 0.7px);
+  background-size: 24px 24px;
+}
+h1, h2, h3, h4, .navbar-brand { letter-spacing: -0.025em; }
+a { color: #eeeeee; text-underline-offset: 0.18em; }
+a:hover { color: #ff6066; }
+::selection { background: var(--nothing-red); color: #fff; }
+
+/* Login, reauthentication and OAuth2 login screens. */
+main.form-signin {
+  width: 100%;
+  max-width: 480px;
+  padding: 2.5rem 1.1rem;
+}
+main.form-signin .kanidm_logo {
+  width: 88px;
+  height: 88px;
+  margin-bottom: 0.8rem;
+  object-fit: contain;
+}
+main.form-signin > h3 {
+  font: 700 clamp(1.3rem, 4vw, 1.75rem)/1.25 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+  margin-bottom: 1.35rem;
+}
+main.form-signin > div:last-child {
+  width: 100%;
+  padding: clamp(1.4rem, 5vw, 2.3rem);
+  background: var(--nothing-panel);
+  border: 1px solid var(--nothing-line);
+  border-radius: 1.5rem;
+  box-shadow: 0 18px 55px #0006;
+}
+
+/* Readable controls and visible focus states throughout the portal. */
+.form-label, .form-check-label {
+  color: #e5e5e5;
+  font-size: 0.86rem;
+}
+.form-control, .form-select, .input-group-text {
+  background: #101010;
+  color: #f5f5f5;
+  border-color: #454545;
+  border-radius: 0.85rem;
+  min-height: 2.7rem;
+}
+.form-control::placeholder { color: #999; }
+.form-control:focus, .form-select:focus {
+  background: #101010;
+  color: #fff;
+  border-color: var(--nothing-red);
+  box-shadow: 0 0 0 0.2rem rgba(215, 25, 32, 0.22);
+}
+.form-check-input { background-color: #101010; border-color: #777; }
+.form-check-input:checked {
+  background-color: var(--nothing-red);
+  border-color: var(--nothing-red);
+}
+.form-check-input:focus { box-shadow: 0 0 0 0.2rem rgba(215, 25, 32, 0.22); }
+
+/* Rounded technical buttons, with a strong red primary action. */
+.btn {
+  border-radius: 999px;
+  padding: 0.64rem 1.2rem;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--nothing-red);
+  --bs-btn-border-color: var(--nothing-red);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--nothing-red-hover);
+  --bs-btn-hover-border-color: var(--nothing-red-hover);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--nothing-red-hover);
+  --bs-btn-active-border-color: var(--nothing-red-hover);
+  --bs-btn-focus-shadow-rgb: 215, 25, 32;
+}
+.btn-outline-primary {
+  --bs-btn-color: #f5f5f5;
+  --bs-btn-border-color: #767676;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--nothing-red);
+  --bs-btn-hover-border-color: var(--nothing-red);
+}
+.btn-secondary {
+  --bs-btn-bg: #292929;
+  --bs-btn-border-color: #474747;
+  --bs-btn-hover-bg: #383838;
+  --bs-btn-hover-border-color: #565656;
+}
+
+/* Application portal, settings, forms and dialogs. */
+.navbar.bg-body-tertiary {
+  background: #151515 !important;
+  border-bottom: 1px solid var(--nothing-line);
+}
+.navbar-brand {
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.nav-link { color: #d2d2d2; }
+.nav-link:hover, .nav-link:focus { color: #fff; }
+.card, .modal-content, .dropdown-menu, .accordion-item,
+.list-group-item {
+  background-color: var(--nothing-panel);
+  color: #f5f5f5;
+  border-color: var(--nothing-line);
+}
+.card, .modal-content, .dropdown-menu { border-radius: 1.25rem; }
+.card-header, .card-footer, .modal-header, .modal-footer {
+  border-color: var(--nothing-line);
+}
+.side-menu-item { border-radius: 0.7rem; }
+.side-menu-item:hover, .side-menu-item.active { background: #292929; }
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: #f5f5f5;
+  --bs-table-border-color: #383838;
+}
+.alert { border-radius: 0.9rem; }
+
+/* Preserve upstream credit and keep it readable. */
+.footer.bg-body-tertiary {
+  background: #101010 !important;
+  border-top: 1px solid var(--nothing-line);
+}
+.footer .text-muted { color: #aaa !important; }
+.footer a { color: #bbb; }
+
+@media (max-width: 480px) {
+  main.form-signin { padding: 1.2rem 0.75rem; }
+  main.form-signin > div:last-child { border-radius: 1.15rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}

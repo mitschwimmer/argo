@@ -1,0 +1,10 @@
+# Teach Kustomize where the Kaniop CRD references ConfigMaps.
+# Without this rule the generated name suffix would not reach spec.volumes.
+nameReference:
+  - kind: ConfigMap
+    version: v1
+    fieldSpecs:
+      - kind: Kanidm
+        group: kaniop.rs
+        version: v1beta1
+        path: spec/volumes/configMap/name

@@ -47,8 +47,9 @@ spec:
               value: walter
             - name: WALTER_OIDC_CLIENT_SECRET_FILE
               value: /run/secrets/walter-oidc
+            # Kanidm's standard groups scope emits group SPNs, not short names.
             - name: WALTER_ALLOWED_GROUPS
-              value: walter-users
+              value: walter-users@auth.archaic.work
             - name: WALTER_INFERENCE_BACKEND
               value: openai
             - name: WALTER_INFERENCE_ENDPOINT

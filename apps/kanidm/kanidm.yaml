@@ -8,6 +8,10 @@ metadata:
 spec:
   domain: auth.archaic.work
   origin: https://auth.archaic.work
+  # Only the Walter namespace may register a cross-namespace OIDC client.
+  oauth2ClientNamespaceSelector:
+    matchLabels:
+      kaniop-identity: walter
   # Latest released Kanidm compatible with Kaniop v0.22.1 (SDK v1.11.2).
   # Review security fixes before exposing this version publicly.
   image: docker.io/kanidm/server:1.11.2

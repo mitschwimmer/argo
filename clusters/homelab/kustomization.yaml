@@ -6,6 +6,7 @@ resources:
   - sealed-secrets.yaml
   - kaniop.yaml
   - kanidm.yaml
+  - walter.yaml
   - gateway-api.yaml
   - cilium-networking.yaml
   - cert-manager.yaml

@@ -19,6 +19,10 @@ spec:
   namespaceResourceWhitelist:
     - group: kaniop.rs
       kind: Kanidm
+    - group: kaniop.rs
+      kind: KanidmPersonAccount
+    - group: kaniop.rs
+      kind: KanidmGroup
     - group: cert-manager.io
       kind: Certificate
     - group: ""

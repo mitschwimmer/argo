@@ -1,0 +1,56 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: walter
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Private chat UI backed by Kanidm OIDC and Strata inference.
+  sourceRepos:
+    - https://github.com/mitschwimmer/argo.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: walter
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: ""
+      kind: Service
+    - group: kaniop.rs
+      kind: KanidmOAuth2Client
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+    - group: bitnami.com
+      kind: SealedSecret
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: walter
+  namespace: argocd
+spec:
+  project: walter
+  source:
+    repoURL: https://github.com/mitschwimmer/argo.git
+    targetRevision: main
+    path: apps/walter
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: walter
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+      # Avoid deleting Walter's persistent conversation data by Git pruning.
+      prune: false
+      allowEmpty: false
+    syncOptions:
+      - SkipDryRunOnMissingResource=true
+      - ServerSideApply=true

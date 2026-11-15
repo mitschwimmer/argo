@@ -1,0 +1,14 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmPersonAccount
+metadata:
+  name: henner
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  personAttributes:
+    displayname: Henner
+  # Kaniop issues a short-lived credential setup link via Kubernetes Events.
+  # Never commit the setup link or resulting credentials.
+  credentialsTokenTtl: 3600
+  credentialBootstrapDelivery: event

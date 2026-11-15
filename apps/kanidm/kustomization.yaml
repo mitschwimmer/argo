@@ -5,3 +5,5 @@ resources:
   - backend-ca.yaml
   - certificate.yaml
   - kanidm.yaml
+  - person-henner.yaml
+  - group-walter-users.yaml

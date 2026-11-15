@@ -1,0 +1,11 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmGroup
+metadata:
+  name: walter-users
+  namespace: kanidm
+spec:
+  kanidmRef:
+    name: kanidm
+  description: Users permitted to sign in to Walter
+  members:
+    - henner

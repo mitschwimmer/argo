@@ -1,0 +1,20 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: walter
+  namespace: walter
+spec:
+  parentRefs:
+    - name: public
+      namespace: edge
+      sectionName: https-walter
+  hostnames:
+    - walter.archaic.work
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: walter
+          port: 80

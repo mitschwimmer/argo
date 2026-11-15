@@ -21,6 +21,17 @@ spec:
           memory: 512Mi
         limits:
           memory: 2Gi
+  # Nothing OS-inspired branding; Kustomize rewrites the generated ConfigMap name.
+  volumes:
+    - name: nothing-theme
+      configMap:
+        name: kanidm-nothing-theme
+  volumeMounts:
+    - name: nothing-theme
+      mountPath: /hpkg/override.css
+      subPath: override.css
+      readOnly: true
+
   # OpenEBS hostpath is node-local; off-cluster backups are required.
   storage:
     volumeClaimTemplate:

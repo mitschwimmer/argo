@@ -1,0 +1,33 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmOAuth2Client
+metadata:
+  name: walter
+  namespace: walter
+spec:
+  kanidmRef:
+    name: kanidm
+    namespace: kanidm
+  displayname: Walter
+  description: Private chat UI
+  origin: https://walter.archaic.work
+  redirectUrl:
+    - https://walter.archaic.work/auth/callback
+  public: false
+  strictRedirectUrl: true
+  # Walter requests openid, profile and groups. Only walter-users may grant them.
+  scopeMap:
+    - group: walter-users
+      scopes:
+        - openid
+        - profile
+        - groups
+  # Emit the exact group claim Walter checks; do not rely on SPN formatting.
+  claimMap:
+    - name: groups
+      joinStrategy: array
+      valuesMap:
+        - group: walter-users
+          values:
+            - walter-users
+  # Kaniop creates Secret walter-kanidm-oauth2-credentials in this namespace.
+  # It contains CLIENT_SECRET, mounted directly into Walter's Pod.

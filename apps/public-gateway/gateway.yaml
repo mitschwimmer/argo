@@ -72,3 +72,18 @@ spec:
           selector:
             matchLabels:
               kubernetes.io/metadata.name: sealed-secrets
+    - name: https-walter
+      hostname: walter.archaic.work
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: walter-archaic-work-tls
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway-access: public

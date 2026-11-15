@@ -8,8 +8,9 @@ metadata:
 spec:
   domain: auth.archaic.work
   origin: https://auth.archaic.work
-  # Pinned upstream security patch from 2026-11-13.
-  image: docker.io/kanidm/server:1.12.1
+  # Latest released Kanidm compatible with Kaniop v0.22.1 (SDK v1.11.2).
+  # Review security fixes before exposing this version publicly.
+  image: docker.io/kanidm/server:1.11.2
   replicaGroups:
     - name: primary
       replicas: 1

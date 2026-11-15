@@ -1,0 +1,51 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: kanidm
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Manage Kanidm and its TLS assets.
+  sourceRepos:
+    - https://github.com/mitschwimmer/argo.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: kanidm
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: kaniop.rs
+      kind: Kanidm
+    - group: cert-manager.io
+      kind: Certificate
+    - group: ""
+      kind: ConfigMap
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kanidm
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: kanidm
+  source:
+    repoURL: https://github.com/mitschwimmer/argo.git
+    targetRevision: main
+    path: apps/kanidm
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kanidm
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: false
+      allowEmpty: false
+    syncOptions:
+      - SkipDryRunOnMissingResource=true
+      - ServerSideApply=true

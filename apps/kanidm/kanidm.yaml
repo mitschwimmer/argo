@@ -1,0 +1,47 @@
+apiVersion: kaniop.rs/v1beta1
+kind: Kanidm
+metadata:
+  name: kanidm
+  namespace: kanidm
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  domain: auth.archaic.work
+  origin: https://auth.archaic.work
+  # Pinned upstream security patch from 2026-11-13.
+  image: docker.io/kanidm/server:1.12.1
+  replicaGroups:
+    - name: primary
+      replicas: 1
+      primaryNode: true
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          memory: 2Gi
+  # OpenEBS hostpath is node-local; off-cluster backups are required.
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: openebs-hostpath
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+  tlsSecretName: auth-archaic-work-backend-tls
+  # Derived Service, HTTPRoute and BackendTLSPolicy belong to Kaniop.
+  gateway:
+    parentRefs:
+      - name: public
+        namespace: edge
+        sectionName: https-auth
+    backendTlsPolicy:
+      validation:
+        hostname: auth.archaic.work
+        # Avoid Cilium 1.20.x System CA regression.
+        caCertificateRefs:
+          - group: ""
+            kind: ConfigMap
+            name: kanidm-backend-ca

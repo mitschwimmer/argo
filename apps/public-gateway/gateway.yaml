@@ -14,13 +14,16 @@ spec:
       value: 192.168.1.201
   listeners:
     - name: http
-      hostname: hello.archaic.work
+      # HTTP-01 challenges and redirects for both hostnames.
       port: 80
       protocol: HTTP
-      # ACME creates its temporary solver HTTPRoute in edge.
+      # ACME solver HTTPRoutes may attach from opt-in namespaces.
       allowedRoutes:
         namespaces:
-          from: Same
+          from: Selector
+          selector:
+            matchLabels:
+              gateway-access: public
     - name: https
       hostname: hello.archaic.work
       port: 443
@@ -31,6 +34,21 @@ spec:
           - kind: Secret
             name: hello-archaic-work-tls
       # Only opt-in namespaces may attach application routes.
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway-access: public
+    - name: https-auth
+      hostname: auth.archaic.work
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: auth-archaic-work-tls
       allowedRoutes:
         namespaces:
           from: Selector

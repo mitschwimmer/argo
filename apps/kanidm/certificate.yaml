@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: auth-archaic-work-backend
+  namespace: kanidm
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  # Backend TLS certificate is distinct from the public Gateway's edge Secret.
+  secretName: auth-archaic-work-backend-tls
+  dnsNames:
+    - auth.archaic.work
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer

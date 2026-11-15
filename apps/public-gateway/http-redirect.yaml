@@ -9,6 +9,7 @@ spec:
       sectionName: http
   hostnames:
     - hello.archaic.work
+    - auth.archaic.work
   rules:
     # cert-manager's Exact ACME challenge path takes precedence over this prefix.
     - matches:

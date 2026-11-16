@@ -25,13 +25,13 @@ spec:
           memory: 512Mi
         limits:
           memory: 2Gi
-  # Nothing OS-inspired branding; Kustomize rewrites the generated ConfigMap name.
+  # Theme delivered by a Git-pinned Kustomize base; name is content-hashed.
   volumes:
-    - name: nothing-theme
+    - name: archaic-theme
       configMap:
-        name: kanidm-nothing-theme
+        name: kanidm-archaic-theme
   volumeMounts:
-    - name: nothing-theme
+    - name: archaic-theme
       mountPath: /hpkg/override.css
       subPath: override.css
       readOnly: true

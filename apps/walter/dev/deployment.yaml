@@ -32,7 +32,7 @@ spec:
       containers:
         - name: walter
           # Publish this exact develop commit via manual OCI workflow_dispatch.
-          image: ghcr.io/mitschwimmer/walter@sha256:4437ce43e87aae4585131dd060c48487deebf79943a77ca3b3ba424c5d14826c
+          image: ghcr.io/mitschwimmer/walter@sha256:7f9afe9e3fbc67b304f50e4d1c1adacb2562f9eb050c0447aaf8fcbb6265f309
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

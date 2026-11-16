@@ -5,6 +5,7 @@ metadata:
   name: kanidm
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   description: Manage Kanidm and its TLS assets.
@@ -34,6 +35,7 @@ metadata:
   name: kanidm
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "1"
 spec:
   project: kanidm
@@ -48,8 +50,9 @@ spec:
     automated:
       enabled: true
       selfHeal: true
-      prune: false
+      prune: true
       allowEmpty: false
     syncOptions:
+      - PruneLast=true
       - SkipDryRunOnMissingResource=true
       - ServerSideApply=true

@@ -5,6 +5,7 @@ metadata:
   name: openebs
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   description: Manage the OpenEBS Local PV Hostpath provisioner.
@@ -31,6 +32,8 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
   name: openebs
   namespace: argocd
 spec:
@@ -57,6 +60,7 @@ spec:
     automated:
       enabled: true
       selfHeal: true
+      # Protect controller/CRD/StorageClass lifecycle from auto deletion.
       prune: false
       allowEmpty: false
     syncOptions:

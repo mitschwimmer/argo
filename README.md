@@ -34,10 +34,54 @@ or plaintext Secret resources. Public HTTPS checkout requires no GitHub token.
    `clusters/homelab/kustomization.yaml`, including its own definition and
    project. Subsequent edits are reconciled from `main` automatically.
 
-The root has automated sync and self-healing enabled, but automated pruning
-disabled. Removing an entry from Git therefore does not automatically delete
-its live object. Child applications should make their own explicit pruning
-decision. There is no cascading-delete finalizer on the root.
+The root has automated sync, self-healing and pruning enabled. It prunes
+low-risk Application/AppProject definitions; critical child Applications and
+AppProjects use `Prune=confirm,Delete=confirm` and require explicit approval.
+The root and child Applications have no cascading-delete finalizers declared
+in Git. Removing a child Application from the root does not normally delete
+its workloads; inspect live finalizers before any such change.
+
+## Safe automatic pruning
+
+Argo CD cannot infer whether deleting a resource will lose data. Use
+resource-level `argocd.argoproj.io/sync-options:
+Prune=confirm,Delete=confirm` for persistent or high-impact objects, and
+`prune: true` on an Application only when remaining resources are safe to
+remove automatically. `Delete=confirm` also protects against cascading
+Application deletion through Argo CD; it does **not** prevent an administrator
+from deleting the namespace directly with `kubectl`.
+
+- The `homelab` root auto-prunes low-risk Application/AppProject definitions.
+  Critical child Applications and projects require manual approval to prune.
+  No cascading-delete finalizer is declared for these Applications: removal
+  from the root may orphan resources rather than clean up workloads.
+- `hello-world`, `sealing-certificate`, `public-gateway`, and `kanidm`
+  have automatic pruning. The public Gateway and its namespace require
+  confirmation; Kanidm's database CR, user/group CRs, certificate and
+  namespace require confirmation. Other transient resources may be pruned.
+- `walter-prd` and `walter-dev` have pruning prepared, but **automatic sync
+  is still disabled** pending an operator-confirmed cutover. When enabled,
+  they can auto-prune stateless resources, while namespace, PVC,
+  OIDC client and encrypted Strata credential require confirmation.
+- `openebs`, `sealed-secrets`, `kaniop`, `gateway-api`,
+  `cilium-networking`, and `cert-manager` retain `prune: false`.
+  Their Helm charts, CRDs, storage or CNI dependencies make unreviewed
+  deletion an infrastructure and potential data-loss risk.
+- Keep `allowEmpty: false`. `PruneLast=true` on auto-pruning Applications
+  defers pruning until replacement resources are applied and healthy.
+  An object awaiting confirmation will remain pending until explicitly
+  approved; treat it as a deliberate review, not a stuck reconciliation.
+
+**Before merging any change that enables pruning**, inspect the live Argo CD
+diff for the `homelab` root and affected children. In particular, the
+legacy `walter` Application/AppProject from the namespace migration may
+still exist because pruning was previously disabled. Check whether live
+Application objects have cascading-delete finalizers. Resolve or explicitly
+approve any stale resources before merging; a Git annotation cannot guard
+an already-orphaned live resource that is no longer declared in Git.
+Also verify a restorable backup exists before approving deletion of Kanidm
+state or a Walter PVC. Never assume a confirmation prompt itself makes
+a destructive deletion safe.
 
 ## Gateway API and Cilium networking
 
@@ -82,9 +126,9 @@ when the Argo-managed override arrives. The chart upgrade and checksum-based Pod
 Cilium operator and agent onto the new features; confirm that with live checks.
 No one-time manual operator restart is part of the intended normal path.
 
-The root Application uses `prune: false`. Removing a `HelmChartConfig`
-file from Git therefore **does not** automatically delete the live
-override. Treat changes or removal as a networking operation. If an
+The `gateway-api` child Application retains `prune: false`. Removing a
+`HelmChartConfig` file from Git therefore **does not** automatically delete
+the live override. Treat changes or removal as a networking operation. If an
 override disrupts Cilium, use K3s control-plane access to inspect the
 `HelmChart` and `HelmChartConfig`; revert the bad values in Git. If
 Argo is unavailable, ensure its automated reconciliation will not

@@ -1,57 +1,47 @@
-# Kanidm theme
+# Kanidm theme distribution
 
-Industrial dark styling for the Kanidm login, OAuth2 authorization, device
-login and account portal. The visible identity is "ARCHAIC", with a technical
-monospaced treatment, restrained grid background, high-contrast neutral
-buttons, minimal red indicators, and consistent **8pt** surface radii
-(approximately 10.67 CSS pixels).
+The Kanidm UI theme is maintained in
+[archaic-work/kanidm-theme](https://github.com/archaic-work/kanidm-theme).
+This GitOps overlay consumes that repository as a **commit-pinned remote
+Kustomize base** rather than copying the stylesheet or downloading it at Pod
+startup.
 
-Pure CSS, without JavaScript, downloaded fonts, or external assets on login
-pages. The stylesheet is tailored to the pinned Kanidm **1.11.2** templates.
+## Deployment
 
-The source is [`override.css`](override.css). Kustomize generates a
-content-hashed `kanidm-nothing-theme` ConfigMap, and
-[`kustomizeconfig.yaml`](kustomizeconfig.yaml) rewrites its name reference in
-the `Kanidm` custom resource. Kaniop mounts the file at the upstream-supported
-`/hpkg/override.css` path. Keep that mount in place; do not mount over `/hpkg`.
+The remote base in [`kustomization.yaml`](kustomization.yaml) generates a
+content-hashed `kanidm-theme` ConfigMap in the `kanidm` namespace. The
+[`kustomizeconfig.yaml`](kustomizeconfig.yaml) name-reference rule updates
+`Kanidm.spec.volumes[].configMap.name` to match the generated name.
+Kaniop mounts its `override.css` key read-only at
+`/hpkg/override.css`. Do **not** mount over all of `/hpkg`.
 
-## Branding limitations
+No theme image, container registry, cluster-side downloader, or duplicated
+theme source is needed. The Argo CD repo-server must be able to clone the
+public theme repository over HTTPS when rendering this Application.
 
-Kanidm's templates still own the domain display-name text and icons. For a
-white-label visual appearance this CSS hides the upstream logo and the
-"Powered by Kanidm" footer, and visually replaces the large login/portal
-identity text with "ARCHAIC". It **does not** modify Kanidm's server-rendered
-semantics: assistive technologies may still announce the configured domain
-display name. Set the actual Kanidm domain display name to "ARCHAIC" through
-its administration interface as a separate, reviewed operational change.
+## Update procedure
 
-The browser tab title (`Login - Kanidm`) and stock favicon originate in the
-server templates and cannot be replaced using CSS alone. Do not inject scripts
-or proxy substitutions into authentication responses to hide those strings.
+1. Merge and visually review changes in the theme repository.
+2. Replace the full commit SHA in the remote Kustomize resource URL with
+   the **merged** theme commit. Do not track `main` or a mutable branch.
+3. Render `kubectl kustomize apps/kanidm` and verify that the generated
+   ConfigMap contains `override.css` and the Kanidm CR references its exact
+   hashed name. Also inspect `argocd app diff kanidm`.
+4. Review login and account UI behavior in both light and dark modes, on
+   desktop and mobile. Confirm the theme's visual test run targets the
+   **deployed Kanidm version** before promotion.
+5. Merge the Argo PR only after validation. Argo CD automatically syncs it.
+   The CSS uses a Kubernetes `subPath` mount, so changing the ConfigMap
+   does **not** update existing Pods. Confirm Kaniop performs a controlled
+   Pod rollout, or schedule an explicit restart.
 
-## Validation
+The current cluster pins **Kaniop v0.22.1** and **Kanidm 1.11.2** while
+the theme repository's visual CI currently targets **Kanidm 1.12.1**.
+That mismatch must be tested or resolved before deployment. Changing Kanidm
+and Kaniop versions is intentionally outside the scope of this theme PR.
 
-Before merging, render the existing Argo application:
+## Rollback
 
-```sh
-kubectl kustomize apps/kanidm > /tmp/kanidm-rendered.yaml
-```
-
-Confirm the generated ConfigMap has an `override.css` data key and its hashed
-name matches `spec.volumes[].configMap.name`. After merging, Argo CD will
-reconcile the generated ConfigMap and the Kaniop-managed Kanidm resource.
-The CSS is mounted with `subPath`, so verify that reconciliation actually
-restarts the server pod to pick up the new stylesheet; restart the rollout
-deliberately if it does not.
-
-In the browser, hard-refresh `https://auth.archaic.work` and check that the
-CSS is served from `/pkg/override.css`. Inspect the username entry, password,
-TOTP, passkey/security-key choice, OAuth2 consent, device authorization,
-credential reset, profile and admin pages. Check small screens, keyboard focus,
-alerts and errors. The upstream template includes extra identity labels in
-credential reset and the browser title; this CSS intentionally avoids hiding
-those functional details.
-
-For rollback, revert the CSS commit and allow Argo CD / Kaniop to reconcile.
-Generated ConfigMaps might remain because the Argo CD Application has pruning
-disabled.
+Revert the Argo theme pin and reconcile the application, then ensure the
+Kanidm Pod reloads the previous CSS. Argo CD pruning is disabled; old
+content-hashed ConfigMaps may persist after a rollback or update.

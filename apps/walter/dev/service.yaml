@@ -2,7 +2,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: walter
-  namespace: walter
+  namespace: walter-dev
+  labels:
+    environment: dev
 spec:
   selector:
     app: walter

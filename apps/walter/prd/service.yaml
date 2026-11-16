@@ -1,11 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: walter-develop
-  namespace: walter-develop
+  name: walter
+  namespace: walter-prd
+  labels:
+    environment: prd
 spec:
   selector:
-    app: walter-develop
+    app: walter
   ports:
     - name: http
       port: 80

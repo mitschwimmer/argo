@@ -1,10 +1,12 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: walter-develop
+  name: walter-dev
   labels:
+    environment: dev
+    app.kubernetes.io/name: walter
     gateway-access: public
-    # Must match Kanidm's existing oauth2ClientNamespaceSelector.
+    # Kaniop permits Walter OIDC clients from both opted-in namespaces.
     kaniop-identity: walter
   annotations:
     argocd.argoproj.io/sync-wave: "-1"

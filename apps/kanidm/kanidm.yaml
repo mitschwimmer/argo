@@ -8,13 +8,13 @@ metadata:
 spec:
   domain: auth.archaic.work
   origin: https://auth.archaic.work
-  # Opt-in Walter namespaces may register cross-namespace OIDC clients.
+  # Only the Walter namespace may register a cross-namespace OIDC client.
   oauth2ClientNamespaceSelector:
     matchLabels:
       kaniop-identity: walter
-  # Latest released Kanidm compatible with Kaniop v0.22.1 (SDK v1.11.2).
-  # Review security fixes before exposing this version publicly.
-  image: docker.io/kanidm/server:1.11.2
+  # Match the Kanidm 1.12.1 client/protocol SDK in Kaniop v0.23.0.
+  # Verify an off-cluster backup before upgrading the stateful database.
+  image: docker.io/kanidm/server:1.12.1
   replicaGroups:
     - name: primary
       replicas: 1
@@ -25,13 +25,13 @@ spec:
           memory: 512Mi
         limits:
           memory: 2Gi
-  # Nothing OS-inspired branding; Kustomize rewrites the generated ConfigMap name.
+  # Theme delivered by a Git-pinned Kustomize base; name is content-hashed.
   volumes:
-    - name: nothing-theme
+    - name: archaic-theme
       configMap:
-        name: kanidm-nothing-theme
+        name: kanidm-theme
   volumeMounts:
-    - name: nothing-theme
+    - name: archaic-theme
       mountPath: /hpkg/override.css
       subPath: override.css
       readOnly: true

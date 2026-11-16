@@ -7,8 +7,8 @@ resources:
   - sealing-certificate.yaml
   - kaniop.yaml
   - kanidm.yaml
-  - walter.yaml
-  - walter-develop.yaml
+  - walter-prd.yaml
+  - walter-dev.yaml
   - gateway-api.yaml
   - cilium-networking.yaml
   - cert-manager.yaml

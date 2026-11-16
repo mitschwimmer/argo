@@ -7,14 +7,9 @@ resources:
   - kanidm.yaml
   - person-henner.yaml
   - group-walter-users.yaml
+  # Theme distribution lives upstream. Pin a reviewed commit, never main.
+  - https://github.com/archaic-work/kanidm-theme.git?ref=e251b975425814c3d34494fe8202fe7efb597587
 
-# Generate a hashed name whenever the theme changes. A custom nameReference
-# rule updates the ConfigMap reference inside Kaniop's Kanidm CRD.
-configMapGenerator:
-  - name: kanidm-nothing-theme
-    namespace: kanidm
-    files:
-      - override.css=override.css
-
+# Rewrite the generated content-hashed ConfigMap reference inside Kaniop's CRD.
 configurations:
   - kustomizeconfig.yaml

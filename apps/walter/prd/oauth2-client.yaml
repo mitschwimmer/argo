@@ -2,13 +2,17 @@ apiVersion: kaniop.rs/v1beta1
 kind: KanidmOAuth2Client
 metadata:
   name: walter
-  namespace: walter
+  namespace: walter-prd
+  labels:
+    environment: prd
 spec:
+  # Kubernetes resource names stay identical; Kanidm client IDs must be unique.
+  kanidmName: walter-prd
   kanidmRef:
     name: kanidm
     namespace: kanidm
-  displayname: Walter
-  description: Private chat UI
+  displayname: Walter (production)
+  description: Walter prd chat UI
   origin: https://walter.archaic.work
   redirectUrl:
     - https://walter.archaic.work/auth/callback

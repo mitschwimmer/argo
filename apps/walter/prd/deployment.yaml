@@ -1,20 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: walter-develop
-  namespace: walter-develop
+  name: walter
+  namespace: walter-prd
+  labels:
+    environment: prd
 spec:
   replicas: 1
-  # Each Walter instance must have exactly one writer for its own data directory.
+  # Walter has one writer per data directory; do not run overlapping Pods.
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: walter-develop
+      app: walter
   template:
     metadata:
       labels:
-        app: walter-develop
+        app: walter
+        environment: prd
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
@@ -28,8 +31,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: walter
-          # Publish this exact develop commit through the Walter OCI workflow_dispatch.
-          image: ghcr.io/mitschwimmer/walter:sha-6a0fcf13fd92050430637cf62538d21a881a23c2
+          # Published by Walter's successful main-branch image workflow.
+          image: ghcr.io/mitschwimmer/walter@sha256:9b68b135f08919e816a1476e88b83af57ea5ae87cf47ca78dd2cbbc1a254f407
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -40,14 +43,14 @@ spec:
             - name: WALTER_DATA_DIR
               value: /data
             - name: WALTER_PUBLIC_URL
-              value: https://walter-develop.archaic.work
+              value: https://walter.archaic.work
             - name: WALTER_OIDC_ISSUER
-              value: https://auth.archaic.work/oauth2/openid/walter-develop
+              value: https://auth.archaic.work/oauth2/openid/walter-prd
             - name: WALTER_OIDC_CLIENT_ID
-              value: walter-develop
+              value: walter-prd
             - name: WALTER_OIDC_CLIENT_SECRET_FILE
               value: /run/secrets/walter-oidc
-            # Match the current production allow-list until OIDC acceptance is verified.
+            # Kanidm's standard groups scope emits group SPNs, not short names.
             - name: WALTER_ALLOWED_GROUPS
               value: walter-users@auth.archaic.work
             - name: WALTER_INFERENCE_BACKEND
@@ -89,17 +92,18 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: walter-develop-data
+            claimName: walter-data
         - name: credentials
           projected:
+            # Kubelet applies fsGroup=65532, making group-readable secrets
+            # accessible to the non-root container without world access.
             defaultMode: 0440
             sources:
               - secret:
-                  name: walter-develop-kanidm-oauth2-credentials
+                  name: walter-kanidm-oauth2-credentials
                   items:
                     - key: CLIENT_SECRET
                       path: walter-oidc
-              # Use a separately sealed Strata key in this namespace.
               - secret:
                   name: walter-strata-api-key
                   items:

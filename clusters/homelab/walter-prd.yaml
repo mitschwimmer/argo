@@ -2,17 +2,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: walter-develop
+  name: walter-prd
   namespace: argocd
+  labels:
+    environment: prd
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: Develop-branch Walter test instance in its own namespace.
+  description: Walter (prd) workload within its own namespace.
   sourceRepos:
     - https://github.com/mitschwimmer/argo.git
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: walter-develop
+      namespace: walter-prd
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
@@ -33,23 +35,24 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: walter-develop
+  name: walter-prd
   namespace: argocd
+  labels:
+    environment: prd
 spec:
-  project: walter-develop
+  project: walter-prd
   source:
     repoURL: https://github.com/mitschwimmer/argo.git
     targetRevision: main
-    path: apps/walter-develop
+    path: apps/walter/prd
   destination:
     server: https://kubernetes.default.svc
-    namespace: walter-develop
+    namespace: walter-prd
   syncPolicy:
+    # Cutover safety: old Application walter still exists because root pruning
+    # is disabled. Sync manually only after removing the old application/route.
     automated:
-      enabled: true
-      selfHeal: true
-      prune: false
-      allowEmpty: false
+      enabled: false
     syncOptions:
       - SkipDryRunOnMissingResource=true
       - ServerSideApply=true

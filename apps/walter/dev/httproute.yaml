@@ -1,20 +1,22 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: walter-develop
-  namespace: walter-develop
+  name: walter
+  namespace: walter-dev
+  labels:
+    environment: dev
 spec:
   parentRefs:
     - name: public
       namespace: edge
-      sectionName: https-walter-develop
+      sectionName: https-walter-dev
   hostnames:
-    - walter-develop.archaic.work
+    - walter-dev.archaic.work
   rules:
     - matches:
         - path:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: walter-develop
+        - name: walter
           port: 80

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: walter-develop
-  namespace: walter
+  namespace: walter-develop
 spec:
   replicas: 1
   # Each Walter instance must have exactly one writer for its own data directory.
@@ -99,7 +99,7 @@ spec:
                   items:
                     - key: CLIENT_SECRET
                       path: walter-oidc
-              # Reuse the already-sealed Strata key in the existing walter namespace.
+              # Use a separately sealed Strata key in this namespace.
               - secret:
                   name: walter-strata-api-key
                   items:

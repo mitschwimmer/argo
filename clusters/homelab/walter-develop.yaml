@@ -7,13 +7,15 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: Develop-branch Walter test instance; shares namespace, not persistent data.
+  description: Develop-branch Walter test instance in its own namespace.
   sourceRepos:
     - https://github.com/mitschwimmer/argo.git
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: walter
-  clusterResourceWhitelist: []
+      namespace: walter-develop
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
   namespaceResourceWhitelist:
     - group: apps
       kind: Deployment
@@ -25,6 +27,8 @@ spec:
       kind: KanidmOAuth2Client
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
+    - group: bitnami.com
+      kind: SealedSecret
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -39,7 +43,7 @@ spec:
     path: apps/walter-develop
   destination:
     server: https://kubernetes.default.svc
-    namespace: walter
+    namespace: walter-develop
   syncPolicy:
     automated:
       enabled: true

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: walter-develop
+  labels:
+    gateway-access: public
+    # Must match Kanidm's existing oauth2ClientNamespaceSelector.
+    kaniop-identity: walter
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"

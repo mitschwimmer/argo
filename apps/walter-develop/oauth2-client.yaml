@@ -2,7 +2,7 @@ apiVersion: kaniop.rs/v1beta1
 kind: KanidmOAuth2Client
 metadata:
   name: walter-develop
-  namespace: walter
+  namespace: walter-develop
 spec:
   kanidmRef:
     name: kanidm
@@ -27,4 +27,4 @@ spec:
         - group: walter-users
           values:
             - walter-users
-  # Kaniop creates walter-develop-kanidm-oauth2-credentials in namespace walter.
+  # Kaniop creates walter-develop-kanidm-oauth2-credentials in namespace walter-develop.

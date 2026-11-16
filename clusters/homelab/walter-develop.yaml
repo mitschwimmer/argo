@@ -1,0 +1,51 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: walter-develop
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Develop-branch Walter test instance; shares namespace, not persistent data.
+  sourceRepos:
+    - https://github.com/mitschwimmer/argo.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: walter
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: ""
+      kind: Service
+    - group: kaniop.rs
+      kind: KanidmOAuth2Client
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: walter-develop
+  namespace: argocd
+spec:
+  project: walter-develop
+  source:
+    repoURL: https://github.com/mitschwimmer/argo.git
+    targetRevision: main
+    path: apps/walter-develop
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: walter
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: false
+      allowEmpty: false
+    syncOptions:
+      - SkipDryRunOnMissingResource=true
+      - ServerSideApply=true

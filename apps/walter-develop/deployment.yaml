@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: walter-develop
+  namespace: walter
+spec:
+  replicas: 1
+  # Each Walter instance must have exactly one writer for its own data directory.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: walter-develop
+  template:
+    metadata:
+      labels:
+        app: walter-develop
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: walter
+          # Publish this exact develop commit through the Walter OCI workflow_dispatch.
+          image: ghcr.io/mitschwimmer/walter:sha-6a0fcf13fd92050430637cf62538d21a881a23c2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: WALTER_LISTEN
+              value: 0.0.0.0:8080
+            - name: WALTER_DATA_DIR
+              value: /data
+            - name: WALTER_PUBLIC_URL
+              value: https://walter-develop.archaic.work
+            - name: WALTER_OIDC_ISSUER
+              value: https://auth.archaic.work/oauth2/openid/walter-develop
+            - name: WALTER_OIDC_CLIENT_ID
+              value: walter-develop
+            - name: WALTER_OIDC_CLIENT_SECRET_FILE
+              value: /run/secrets/walter-oidc
+            # Match the current production allow-list until OIDC acceptance is verified.
+            - name: WALTER_ALLOWED_GROUPS
+              value: walter-users@auth.archaic.work
+            - name: WALTER_INFERENCE_BACKEND
+              value: openai
+            - name: WALTER_INFERENCE_ENDPOINT
+              value: http://192.168.1.28:8080/v1/chat/completions
+            - name: WALTER_MODEL
+              value: qwen3.8-flash-next-iq3_s
+            - name: WALTER_INFERENCE_API_KEY_FILE
+              value: /run/secrets/walter-strata
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: credentials
+              mountPath: /run/secrets
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: walter-develop-data
+        - name: credentials
+          projected:
+            defaultMode: 0440
+            sources:
+              - secret:
+                  name: walter-develop-kanidm-oauth2-credentials
+                  items:
+                    - key: CLIENT_SECRET
+                      path: walter-oidc
+              # Reuse the already-sealed Strata key in the existing walter namespace.
+              - secret:
+                  name: walter-strata-api-key
+                  items:
+                    - key: api-key
+                      path: walter-strata

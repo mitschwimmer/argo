@@ -8,6 +8,7 @@ resources:
   - kaniop.yaml
   - kanidm.yaml
   - walter.yaml
+  - walter-develop.yaml
   - gateway-api.yaml
   - cilium-networking.yaml
   - cert-manager.yaml

@@ -87,3 +87,18 @@ spec:
           selector:
             matchLabels:
               gateway-access: public
+    - name: https-walter-develop
+      hostname: walter-develop.archaic.work
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: walter-develop-archaic-work-tls
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway-access: public

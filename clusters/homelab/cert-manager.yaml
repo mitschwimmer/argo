@@ -30,6 +30,8 @@ spec:
     - group: admissionregistration.k8s.io
       kind: ValidatingWebhookConfiguration
   namespaceResourceWhitelist:
+    - group: bitnami.com
+      kind: SealedSecret
     - group: ""
       kind: ServiceAccount
     - group: ""

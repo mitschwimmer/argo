@@ -11,5 +11,7 @@ resources:
   - gateway-api.yaml
   - cilium-networking.yaml
   - cert-manager.yaml
+  - hetzner-dns-webhook.yaml
+  - lan-gateway.yaml
   - public-gateway.yaml
   - hello-world.yaml

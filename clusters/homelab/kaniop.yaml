@@ -5,6 +5,7 @@ metadata:
   name: kaniop
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   description: Manage the Kaniop controller.
@@ -38,6 +39,7 @@ metadata:
   name: kaniop
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "0"
 spec:
   project: kaniop
@@ -60,6 +62,7 @@ spec:
     automated:
       enabled: true
       selfHeal: true
+      # Protect controller/CRD/StorageClass lifecycle from auto deletion.
       prune: false
       allowEmpty: false
     syncOptions:

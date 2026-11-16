@@ -5,6 +5,7 @@ metadata:
   name: public-gateway
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   description: Manage the fixed-IP public Cilium Gateway, HTTPS and HTTP redirects.
@@ -25,6 +26,8 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
   name: public-gateway
   namespace: argocd
 spec:
@@ -40,7 +43,8 @@ spec:
     automated:
       enabled: true
       selfHeal: true
-      prune: false
+      prune: true
       allowEmpty: false
     syncOptions:
+      - PruneLast=true
       - SkipDryRunOnMissingResource=true

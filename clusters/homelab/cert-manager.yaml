@@ -5,6 +5,7 @@ metadata:
   name: cert-manager
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   description: Install cert-manager and manage the Let's Encrypt ACME ClusterIssuer.
@@ -52,6 +53,8 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
   name: cert-manager
   namespace: argocd
 spec:
@@ -82,6 +85,7 @@ spec:
     automated:
       enabled: true
       selfHeal: true
+      # Protect controller/CRD/StorageClass lifecycle from auto deletion.
       prune: false
       allowEmpty: false
     syncOptions:

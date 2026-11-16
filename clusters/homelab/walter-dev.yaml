@@ -7,6 +7,7 @@ metadata:
   labels:
     environment: dev
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   description: Walter (dev) workload within its own namespace.
@@ -35,6 +36,8 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
   name: walter-dev
   namespace: argocd
   labels:
@@ -49,10 +52,14 @@ spec:
     server: https://kubernetes.default.svc
     namespace: walter-dev
   syncPolicy:
-    # Cutover safety: old Application walter still exists because root pruning
-    # is disabled. Sync manually only after removing the old application/route.
+    # Cutover verified; reconcile and prune stateless resources automatically.
+    # Persistent resources have Prune=confirm,Delete=confirm in their manifests.
     automated:
-      enabled: false
+      enabled: true
+      selfHeal: true
+      prune: true
+      allowEmpty: false
     syncOptions:
+      - PruneLast=true
       - SkipDryRunOnMissingResource=true
       - ServerSideApply=true

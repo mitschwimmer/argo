@@ -29,7 +29,7 @@ spec:
   volumes:
     - name: archaic-theme
       configMap:
-        name: kanidm-archaic-theme
+        name: kanidm-theme
   volumeMounts:
     - name: archaic-theme
       mountPath: /hpkg/override.css

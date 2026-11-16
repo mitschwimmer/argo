@@ -9,4 +9,5 @@ metadata:
     # Kaniop permits Walter OIDC clients from both opted-in namespaces.
     kaniop-identity: walter
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"

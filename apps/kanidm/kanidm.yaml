@@ -4,6 +4,7 @@ metadata:
   name: kanidm
   namespace: kanidm
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "1"
 spec:
   domain: auth.archaic.work

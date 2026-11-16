@@ -4,6 +4,7 @@ metadata:
   name: public
   namespace: edge
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     # cert-manager creates and renews the Certificate in the edge namespace.
     cert-manager.io/cluster-issuer: letsencrypt-production
 spec:

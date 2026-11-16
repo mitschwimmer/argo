@@ -43,7 +43,7 @@ spec:
   project: kaniop
   source:
     repoURL: https://github.com/pando85/kaniop.git
-    targetRevision: v0.22.1
+    targetRevision: v0.23.0
     path: charts/kaniop
     helm:
       releaseName: kaniop

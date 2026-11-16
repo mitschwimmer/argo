@@ -12,9 +12,9 @@ spec:
   oauth2ClientNamespaceSelector:
     matchLabels:
       kaniop-identity: walter
-  # Latest released Kanidm compatible with Kaniop v0.22.1 (SDK v1.11.2).
-  # Review security fixes before exposing this version publicly.
-  image: docker.io/kanidm/server:1.11.2
+  # Match the Kanidm 1.12.1 client/protocol SDK in Kaniop v0.23.0.
+  # Verify an off-cluster backup before upgrading the stateful database.
+  image: docker.io/kanidm/server:1.12.1
   replicaGroups:
     - name: primary
       replicas: 1

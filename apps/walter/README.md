@@ -93,9 +93,46 @@ Both clients use the existing `walter-users` group mapping. Check the
 The two environments share the inference service; namespace separation
 does not provide network isolation.
 
-## Future updates
+## Automatic development deployment
 
-Production remains pinned to its established image digest. To test a newer
-`develop` commit, manually run the Walter OCI workflow for it, pin the
-resulting image digest in `apps/walter/dev/deployment.yaml`, and merge a
-GitOps update. Advancing the source branch alone does not deploy it.
+Walter's `develop` branch CI publishes each tested build to GHCR with both
+`sha-<commit>` and the moving `develop` tag. The `develop` tag is only
+an **image discovery mechanism**, not the Kubernetes Deployment reference.
+
+The Argo repository's `.github/workflows/sync-walter-develop.yaml` checks
+the public GHCR tag every 15 minutes (and supports `workflow_dispatch`).
+When its digest changes, GitHub Actions updates exactly
+`apps/walter/dev/deployment.yaml` with an immutable
+`ghcr.io/mitschwimmer/walter@sha256:...` reference and commits to `main`.
+The existing `walter-dev` Argo CD Application then syncs that Git commit
+automatically. No external GitHub PAT or Kubernetes credentials are needed:
+this repository's GitHub Actions `GITHUB_TOKEN` requires `contents: write`,
+and GHCR must allow public image pulls. Repository branch protections must
+permit the automation's GitHub Actions bot to push to `main` (or this step
+will fail until a permitted write-back mechanism is configured).
+
+GitHub scheduled workflows are not guaranteed to start on time. A successful
+image publish usually reaches GitOps after the next scheduled run, rather
+than instantly. You can trigger **Sync Walter develop image** manually in
+the Argo repository's Actions tab for faster reconciliation.
+
+Production remains pinned to its independently reviewed digest. The updater
+does **not** modify `apps/walter/prd/`, secrets, namespaces, or any other
+workloads. If the GHCR tag is not yet published, the previous dev image
+reference remains untouched.
+
+### Verification
+
+1. Merge the Walter CI change into `develop` and confirm its image job
+   passes (including the browser tests) and publishes `:develop`.
+2. Merge the Argo workflow; trigger `Sync Walter develop image` once,
+   then check its run and the automated commit to `main`.
+3. Check `argocd/Application/walter-dev` is Synced/Healthy and that
+   `walter-dev/Deployment/walter` uses the digest committed in Git.
+
+```sh
+k3s kubectl -n argocd get application walter-dev
+k3s kubectl -n walter-dev rollout status deployment/walter --timeout=300s
+k3s kubectl -n walter-dev get deployment walter -o jsonpath='{.spec.template.spec.containers[0].image}'
+```
+

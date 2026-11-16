@@ -69,8 +69,8 @@ access with UniFi firewall rules if necessary.
 
 ## Attach an internal service
 
-Label its Namespace with `gateway-access: lan` and add an HTTPRoute
-in that namespace, referencing `edge/lan` listener `https`:
+Create an HTTPRoute in the application's namespace, referencing the
+`edge/lan` Gateway and its `https` listener. No namespace labels are needed:
 
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
@@ -93,7 +93,9 @@ spec:
 
 No application is exposed by deploying the gateway alone. Only the
 redirect route in `edge` can attach to the cleartext HTTP listener.
-The HTTPS listener allows only opted-in namespaces.
+The HTTPS listener accepts routes from any namespace for hostnames
+matching `*.lan.archaic.work`. Restrict who can create HTTPRoutes using
+Kubernetes RBAC if namespace owners are not fully trusted.
 
 ## Verify after deploying
 

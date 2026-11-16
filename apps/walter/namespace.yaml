@@ -3,7 +3,6 @@ kind: Namespace
 metadata:
   name: walter
   labels:
-    gateway-access: public
     # Kanidm permits OIDC clients from only this opt-in namespace.
     kaniop-identity: walter
   annotations:

@@ -27,7 +27,4 @@ spec:
             name: lan-archaic-work-tls
       allowedRoutes:
         namespaces:
-          from: Selector
-          selector:
-            matchLabels:
-              gateway-access: lan
+          from: All

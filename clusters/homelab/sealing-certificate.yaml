@@ -21,6 +21,9 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  # Stateless Application: root pruning may cascade its disposable resources.
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
   name: sealing-certificate
   namespace: argocd
 spec:

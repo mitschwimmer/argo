@@ -37,9 +37,10 @@ or plaintext Secret resources. Public HTTPS checkout requires no GitHub token.
 The root has automated sync, self-healing and pruning enabled. It prunes
 low-risk Application/AppProject definitions; critical child Applications and
 AppProjects use `Prune=confirm,Delete=confirm` and require explicit approval.
-The root and child Applications have no cascading-delete finalizers declared
-in Git. Removing a child Application from the root does not normally delete
-its workloads; inspect live finalizers before any such change.
+The root and critical child Applications have no cascading-delete finalizers.
+Only the disposable `hello-world` and stateless `sealing-certificate`
+Applications opt in to cascading deletion when removed from Git. Inspect
+live finalizers before deleting any other child Application.
 
 ## Safe automatic pruning
 
@@ -52,9 +53,11 @@ Application deletion through Argo CD; it does **not** prevent an administrator
 from deleting the namespace directly with `kubectl`.
 
 - The `homelab` root auto-prunes low-risk Application/AppProject definitions.
-  Critical child Applications and projects require manual approval to prune.
-  No cascading-delete finalizer is declared for these Applications: removal
-  from the root may orphan resources rather than clean up workloads.
+  Disposable `hello-world` and stateless `sealing-certificate` carry
+  cascading-delete finalizers, so removing them from the root also prunes
+  their workloads. Critical child Applications and projects require manual
+  approval; they intentionally have no cascading-delete finalizer, so
+  removal from the root may orphan resources rather than clean up workloads.
 - `hello-world`, `sealing-certificate`, `public-gateway`, and `kanidm`
   have automatic pruning. The public Gateway and its namespace require
   confirmation; Kanidm's database CR, user/group CRs, certificate and

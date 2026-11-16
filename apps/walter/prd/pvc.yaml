@@ -2,7 +2,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: walter-data
-  namespace: walter
+  namespace: walter-prd
+  labels:
+    environment: prd
 spec:
   accessModes:
     - ReadWriteOnce

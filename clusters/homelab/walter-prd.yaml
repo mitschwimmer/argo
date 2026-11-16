@@ -1,0 +1,58 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: walter-prd
+  namespace: argocd
+  labels:
+    environment: prd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Walter (prd) workload within its own namespace.
+  sourceRepos:
+    - https://github.com/mitschwimmer/argo.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: walter-prd
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: ""
+      kind: Service
+    - group: kaniop.rs
+      kind: KanidmOAuth2Client
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+    - group: bitnami.com
+      kind: SealedSecret
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: walter-prd
+  namespace: argocd
+  labels:
+    environment: prd
+spec:
+  project: walter-prd
+  source:
+    repoURL: https://github.com/mitschwimmer/argo.git
+    targetRevision: main
+    path: apps/walter/prd
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: walter-prd
+  syncPolicy:
+    # Cutover safety: old Application walter still exists because root pruning
+    # is disabled. Sync manually only after removing the old application/route.
+    automated:
+      enabled: false
+    syncOptions:
+      - SkipDryRunOnMissingResource=true
+      - ServerSideApply=true

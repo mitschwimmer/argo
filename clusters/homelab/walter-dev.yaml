@@ -2,17 +2,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: walter
+  name: walter-dev
   namespace: argocd
+  labels:
+    environment: dev
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: Private chat UI backed by Kanidm OIDC and Strata inference.
+  description: Walter (dev) workload within its own namespace.
   sourceRepos:
     - https://github.com/mitschwimmer/argo.git
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: walter
+      namespace: walter-dev
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
@@ -33,24 +35,24 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: walter
+  name: walter-dev
   namespace: argocd
+  labels:
+    environment: dev
 spec:
-  project: walter
+  project: walter-dev
   source:
     repoURL: https://github.com/mitschwimmer/argo.git
     targetRevision: main
-    path: apps/walter
+    path: apps/walter/dev
   destination:
     server: https://kubernetes.default.svc
-    namespace: walter
+    namespace: walter-dev
   syncPolicy:
+    # Cutover safety: old Application walter still exists because root pruning
+    # is disabled. Sync manually only after removing the old application/route.
     automated:
-      enabled: true
-      selfHeal: true
-      # Avoid deleting Walter's persistent conversation data by Git pruning.
-      prune: false
-      allowEmpty: false
+      enabled: false
     syncOptions:
       - SkipDryRunOnMissingResource=true
       - ServerSideApply=true

@@ -52,10 +52,10 @@ spec:
     server: https://kubernetes.default.svc
     namespace: walter-dev
   syncPolicy:
-    # Enable automated sync only after the old walter route is gone and
-    # the new namespace and secrets are verified. Prune is preconfigured.
+    # Cutover verified; reconcile and prune stateless resources automatically.
+    # Persistent resources have Prune=confirm,Delete=confirm in their manifests.
     automated:
-      enabled: false
+      enabled: true
       selfHeal: true
       prune: true
       allowEmpty: false

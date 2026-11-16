@@ -62,10 +62,10 @@ from deleting the namespace directly with `kubectl`.
   have automatic pruning. The public Gateway and its namespace require
   confirmation; Kanidm's database CR, user/group CRs, certificate and
   namespace require confirmation. Other transient resources may be pruned.
-- `walter-prd` and `walter-dev` have pruning prepared, but **automatic sync
-  is still disabled** pending an operator-confirmed cutover. When enabled,
-  they can auto-prune stateless resources, while namespace, PVC,
-  OIDC client and encrypted Strata credential require confirmation.
+- `walter-prd` and `walter-dev` reconcile and prune automatically
+  after the verified namespace cutover. Stateless resources are pruned;
+  namespace, PVC, OIDC client and encrypted Strata credential require
+  confirmation before pruning.
 - `openebs`, `sealed-secrets`, `kaniop`, `gateway-api`,
   `cilium-networking`, and `cert-manager` retain `prune: false`.
   Their Helm charts, CRDs, storage or CNI dependencies make unreviewed
@@ -75,16 +75,19 @@ from deleting the namespace directly with `kubectl`.
   An object awaiting confirmation will remain pending until explicitly
   approved; treat it as a deliberate review, not a stuck reconciliation.
 
-**Before merging any change that enables pruning**, inspect the live Argo CD
-diff for the `homelab` root and affected children. In particular, the
-legacy `walter` Application/AppProject from the namespace migration may
-still exist because pruning was previously disabled. Check whether live
-Application objects have cascading-delete finalizers. Resolve or explicitly
-approve any stale resources before merging; a Git annotation cannot guard
-an already-orphaned live resource that is no longer declared in Git.
-Also verify a restorable backup exists before approving deletion of Kanidm
-state or a Walter PVC. Never assume a confirmation prompt itself makes
-a destructive deletion safe.
+**Before merging changes that enable root pruning**, inspect the live
+Argo CD diff for `homelab` and its children. The Walter namespace cutover
+has been operator-verified, and legacy `Application/walter` and
+`AppProject/walter` are approved for removal. They are absent from Git:
+root pruning may remove those live Argo CD objects once enabled. The
+legacy `walter` namespace and its PVC are separate Kubernetes resources;
+remove them explicitly if they still exist. First inspect any live Argo CD
+Application finalizers, which could cause cascading workload deletion.
+Review **all other** pending root prunes before merging; a Git annotation
+cannot guard an already-orphaned live resource that is no longer declared
+in Git. Verify restorable backups before approving deletion of Kanidm
+state or current Walter PVCs. Never assume a confirmation prompt itself
+makes a destructive deletion safe.
 
 ## Gateway API and Cilium networking
 

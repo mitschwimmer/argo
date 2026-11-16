@@ -33,81 +33,48 @@ SealedSecret in its namespace. They have separate, fresh PVCs. You have
 explicitly chosen to discard old conversations; **no data migration**
 or backup of the original `walter/walter-data` is required.
 
-## Required before merging
+## Current GitOps operation
 
-1. Publish the development image: run
-   https://github.com/mitschwimmer/walter/actions/workflows/oci.yml
-   on branch `develop`. Verify the published image comes from commit
-   `6a0fcf13fd92050430637cf62538d21a881a23c2` and is pullable.
-   The development manifest currently pins its SHA tag; prefer replacing
-   it with the verified digest. Pushing to `develop` does not
-   automatically publish an image.
-2. **Before deleting the existing `walter` namespace**, from a checkout of
-   this PR on a trusted workstation with access to the existing Kubernetes
-   Secret and `kubeseal`, run:
+The namespace cutover to `walter-prd` and `walter-dev` has been
+operator-verified. Both Argo CD Applications have automated sync,
+self-healing, and pruning enabled. Their `PruneLast=true` setting prunes
+obsolete stateless resources after other sync work succeeds.
 
-   ```sh
-   bash apps/walter/seal-strata.sh
-   ```
+Potentially destructive objects in both namespaces (Namespace, PVC,
+KanidmOAuth2Client and Strata SealedSecret) are marked
+`Prune=confirm,Delete=confirm`. They require an explicit Argo CD prune
+confirmation. The root `homelab` application can automatically remove
+legacy Argo CD child objects that are no longer declared in Git.
 
-   The helper reads the old `walter/walter-strata-api-key`, pipes the
-   decrypted value into `kubeseal --raw` (never to disk), and writes
-   two distinct namespace-bound encrypted SealedSecrets:
-   `apps/walter/prd/strata-sealedsecret.yaml` and
-   `apps/walter/dev/strata-sealedsecret.yaml`.
-   Inspect both ciphertext manifests, add `  - strata-sealedsecret.yaml`
-   to **both** Kustomizations and commit them. Do not copy the original
-   ciphertext from the `walter` namespace or commit a plaintext Secret.
-   A dedicated Strata key per environment is preferable if available.
-   Both Pods require their local decrypted Secret at startup.
-3. Add DNS for `walter-dev.archaic.work` to the same public address
-   as `walter.archaic.work`. Check the Gateway's corresponding
-   `edge/walter-dev-archaic-work-tls` certificate after sync.
-4. Validate the entire change using `kubectl kustomize`:
+### Legacy cleanup
 
-   ```sh
-   kubectl kustomize apps/walter/prd
-   kubectl kustomize apps/walter/dev
-   kubectl kustomize clusters/homelab
-   ```
+The old `Application/walter` and `AppProject/walter` are no longer
+declared in Git, and their removal is authorized following the verified
+cutover. Once root pruning is enabled, Argo CD may delete them. The old
+`walter` Kubernetes namespace and its PVC are **not** managed by the
+new `walter-prd` or `walter-dev` Applications; root pruning alone does
+not guarantee deletion of that namespace. If it still exists, explicitly
+remove it after checking that it hosts no required workloads:
 
-**Keep the PR draft; do not merge until the encrypted Secrets, image, and
-DNS prerequisites are satisfied.** Both new Argo CD Applications initially
-have automated sync disabled to prevent accidental production route
-conflicts with the old `walter` Application.
+```sh
+k3s kubectl -n argocd get application walter -o yaml
+k3s kubectl -n argocd get appproject walter
+k3s kubectl get namespace walter
+k3s kubectl -n walter get all,pvc,httproutes,kanidmoauth2clients,sealedsecrets
+# After reviewing the above, if the obsolete namespace still exists:
+k3s kubectl delete namespace walter
+```
 
-## Cutover (intentional production downtime; old data discarded)
+Namespace deletion destroys the old `walter/walter-data` OpenEBS
+hostpath volume and any old conversations. This data loss has been
+explicitly accepted for the cutover. Do not delete `walter-prd` or
+`walter-dev`. If legacy Argo CD objects linger, inspect their finalizers
+and the root application's live sync status before manually deleting them.
+Never force-remove a finalizer without diagnosing its controller.
 
-The existing `walter` Application and AppProject are not automatically
-removed from the cluster. The root has `prune: false`, and the existing
-Application also has `prune: false`. Merely deleting their manifests
-does not remove the live resources; they would otherwise continue to
-reconcile the old `walter` namespace and produce competing HTTPRoutes.
-
-After **merging** the complete PR, and verifying `walter-prd` and
-`walter-dev` Applications exist but are *not synced*:
-
-1. Delete the old Application: `k3s kubectl -n argocd delete application walter`.
-   Its manifest has no cascading-delete finalizer, so its old resources may
-   remain until you remove the old namespace in the next step.
-2. Delete the old namespace with its old Deployment, volume and OIDC
-   client: `k3s kubectl delete namespace walter`. This **permanently
-   deletes `walter/walter-data`** (OpenEBS hostpath Delete reclaim policy),
-   the old Strata and OIDC Secrets, and old conversations.
-   Wait until `walter` is gone and its HTTPRoute no longer attaches to
-   the public Gateway. If namespace deletion hangs, inspect finalizers
-   and Kaniop's CR cleanup rather than force-removing them.
-3. Delete the leftover AppProject: `k3s kubectl -n argocd delete appproject walter`.
-   The old root will not recreate it once merged, but pruning is disabled.
-4. Manually sync `walter-prd`, then `walter-dev` through Argo CD,
-   check Kaniop-generated OIDC Secrets, decrypted Strata Secrets,
-   HTTPRoute acceptance, TLS, sign-in and SSE generation. Both volumes
-   start empty. Verify `https://walter.archaic.work` after the cutover.
-5. In a separate small GitOps change, re-enable automated sync (with
-   pruning disabled) after both are healthy. This prevents accidental
-   cutover before the old route and app are removed.
-
-These are manual cluster operations, **not** performed by the PR.
+These cleanup commands are **not** performed by GitOps changes or this PR.
+The Strata SealedSecrets for the two new namespaces are already committed
+and included in their respective Kustomizations.
 
 ## Verification
 

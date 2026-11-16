@@ -8,8 +8,7 @@ resources:
   - person-henner.yaml
   - group-walter-users.yaml
   # Theme distribution lives upstream. Pin a reviewed commit, never main.
-  # After merging archaic-work/kanidm-theme#1, repin to its merged commit.
-  - https://github.com/archaic-work/kanidm-theme.git?ref=100d13a7ace70792391c6206e526a610f255ffb1
+  - https://github.com/archaic-work/kanidm-theme.git?ref=e251b975425814c3d34494fe8202fe7efb597587
 
 # Rewrite the generated content-hashed ConfigMap reference inside Kaniop's CRD.
 configurations:

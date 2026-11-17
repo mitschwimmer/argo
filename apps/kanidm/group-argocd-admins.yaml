@@ -1,0 +1,13 @@
+apiVersion: kaniop.rs/v1beta1
+kind: KanidmGroup
+metadata:
+  name: argocd-admins
+  namespace: kanidm
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+spec:
+  kanidmRef:
+    name: kanidm
+  description: Argo CD administrators (not Kanidm system administrators)
+  members:
+    - henner

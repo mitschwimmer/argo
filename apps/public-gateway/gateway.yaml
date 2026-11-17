@@ -47,23 +47,6 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-    - name: https-seal
-      hostname: seal.archaic.work
-      port: 443
-      protocol: HTTPS
-      tls:
-        mode: Terminate
-        certificateRefs:
-          - kind: Secret
-            name: seal-archaic-work-tls
-      # Only HTTPRoutes in the Sealed Secrets namespace may attach here.
-      # The built-in namespace name label avoids modifying the Helm-owned Namespace.
-      allowedRoutes:
-        namespaces:
-          from: Selector
-          selector:
-            matchLabels:
-              kubernetes.io/metadata.name: sealed-secrets
     - name: https-walter
       hostname: walter.archaic.work
       port: 443
@@ -73,18 +56,6 @@ spec:
         certificateRefs:
           - kind: Secret
             name: walter-archaic-work-tls
-      allowedRoutes:
-        namespaces:
-          from: All
-    - name: https-walter-dev
-      hostname: walter-dev.archaic.work
-      port: 443
-      protocol: HTTPS
-      tls:
-        mode: Terminate
-        certificateRefs:
-          - kind: Secret
-            name: walter-dev-archaic-work-tls
       allowedRoutes:
         namespaces:
           from: All

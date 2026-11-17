@@ -43,7 +43,7 @@ spec:
             - name: WALTER_DATA_DIR
               value: /data
             - name: WALTER_PUBLIC_URL
-              value: https://walter-dev.archaic.work
+              value: https://walter.lan.archaic.work
             - name: WALTER_OIDC_ISSUER
               value: https://auth.archaic.work/oauth2/openid/walter-dev
             - name: WALTER_OIDC_CLIENT_ID

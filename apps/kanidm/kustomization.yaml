@@ -7,6 +7,7 @@ resources:
   - kanidm.yaml
   - person-henner.yaml
   - group-walter-users.yaml
+  - group-argocd-admins.yaml
   # Theme distribution lives upstream. Pin a reviewed commit, never main.
   - https://github.com/archaic-work/kanidm-theme.git?ref=b30864778308da316b311e4b5a6034d00ae520ab
 

@@ -9,10 +9,16 @@ metadata:
 spec:
   domain: auth.archaic.work
   origin: https://auth.archaic.work
-  # Only the Walter namespace may register a cross-namespace OIDC client.
+  # Only allow OIDC clients from the named namespaces; argocd's Namespace
+  # stays owned by the K3s bootstrap HelmChart.
   oauth2ClientNamespaceSelector:
-    matchLabels:
-      kaniop-identity: walter
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: In
+        values:
+          - argocd
+          - walter-dev
+          - walter-prd
   # Match the Kanidm 1.12.1 client/protocol SDK in Kaniop v0.23.0.
   # Verify an off-cluster backup before upgrading the stateful database.
   image: docker.io/kanidm/server:1.12.1

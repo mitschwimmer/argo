@@ -30,7 +30,7 @@ The wildcard covers `grafana.lan.archaic.work` but not
      --namespace cert-manager \
      --from-literal=token="$HETZNER_TOKEN" \
      --dry-run=client -o yaml |
-     kubeseal --cert https://seal.archaic.work/v1/cert.pem \
+     kubeseal --cert https://seal.lan.archaic.work/v1/cert.pem \
        --format yaml > apps/cert-manager/hetzner-dns-sealedsecret.yaml
    unset HETZNER_TOKEN
    ```
@@ -50,8 +50,11 @@ Lite pointing to `192.168.1.202`; examples:
 
 - `grafana.lan.archaic.work` -> `192.168.1.202`
 - `argocd.lan.archaic.work` -> `192.168.1.202`
+- `walter.lan.archaic.work` -> `192.168.1.202`
+- `seal.lan.archaic.work` -> `192.168.1.202`
 
-These names are examples, not deployed workloads. The records are only
+Grafana is an example of a future workload. The other three names have
+HTTPRoutes managed by Argo CD. The records are only
 returned to clients using the UniFi DNS resolver. Check DHCP DNS
 settings for each VLAN. Custom client resolvers, browser DoH and VPN
 DNS can bypass these overrides. UniFi firmware/Network versions differ

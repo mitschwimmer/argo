@@ -4,3 +4,4 @@ resources:
   - namespace.yaml
   - clusterissuer.yaml
   - clusterissuer-hetzner.yaml
+  - hetzner-dns-sealedsecret.yaml

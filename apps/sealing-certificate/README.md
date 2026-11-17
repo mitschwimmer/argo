@@ -5,8 +5,8 @@ This Application exposes only `GET /v1/cert.pem` from the existing
 The existing Cilium Gateway `edge/public` terminates HTTPS at its fixed
 `192.168.1.201` address; there is no new gateway or load balancer.
 
-- Host: `seal.archaic.work`
-- URL: `https://seal.archaic.work/v1/cert.pem`
+- Host: `seal.lan.archaic.work`
+- URL: `https://seal.lan.archaic.work/v1/cert.pem`
 - TLS Secret: `edge/seal-archaic-work-tls` (cert-manager creates it from
   the existing `letsencrypt-production` ClusterIssuer)
 - Backend: `sealed-secrets/sealed-secrets-controller:8080`
@@ -16,13 +16,13 @@ The existing Cilium Gateway `edge/public` terminates HTTPS at its fixed
 
 ## DNS and public exposure
 
-Create the `seal.archaic.work` public DNS record pointed at the same WAN
+Create the `seal.lan.archaic.work` public DNS record pointed at the same WAN
 address as `auth.archaic.work`. The router already forwards TCP 80/443 to
 `192.168.1.201`. The existing HTTP listener supports cert-manager's ACME
 HTTP-01 challenge; the HTTP redirect includes the sealing hostname.
 
 If your router lacks NAT hairpinning, arrange split-horizon LAN DNS for
-`seal.archaic.work` -> `192.168.1.201`; keep public DNS correct so
+`seal.lan.archaic.work` -> `192.168.1.201`; keep public DNS correct so
 Let's Encrypt can issue the certificate. The HTTPS URL must be reachable
 *by your workstation*, with a trusted TLS certificate.
 
@@ -37,7 +37,7 @@ After the new Gateway certificate is Ready and the HTTPRoute reports
 `Accepted=True` and `ResolvedRefs=True`, fetch the sealing certificate:
 
 ```sh
-curl -fsS https://seal.archaic.work/v1/cert.pem > sealed-secrets.pem
+curl -fsS https://seal.lan.archaic.work/v1/cert.pem > sealed-secrets.pem
 openssl x509 -in sealed-secrets.pem -noout -subject -fingerprint -sha256
 ```
 
@@ -50,7 +50,7 @@ subsequently published encrypted Secrets.
 `kubeseal` accepts the URL directly and refetches the current certificate:
 
 ```sh
-kubeseal --cert https://seal.archaic.work/v1/cert.pem \
+kubeseal --cert https://seal.lan.archaic.work/v1/cert.pem \
   --format yaml < secret.yaml > sealed-secret.yaml
 ```
 
@@ -61,7 +61,7 @@ To seal Walter's Strata key locally, using only client-side `kubectl`
 kubectl create secret generic walter-strata-api-key \
   --namespace walter --from-file=api-key=/secure/path/to/strata-key \
   --dry-run=client --output yaml |
-  kubeseal --cert https://seal.archaic.work/v1/cert.pem \
+  kubeseal --cert https://seal.lan.archaic.work/v1/cert.pem \
     --format yaml > apps/walter/strata-sealedsecret.yaml
 ```
 
@@ -80,7 +80,7 @@ k3s kubectl -n sealed-secrets get service sealed-secrets-controller
 ```
 
 Confirm the actual certificate contents over HTTPS, then ensure a request
-to another controller API path on `seal.archaic.work` does **not** route
+to another controller API path on `seal.lan.archaic.work` does **not** route
 to the backend. `HEAD /v1/cert.pem` also intentionally does not match.
 
 The controller rotates its *public sealing certificate* periodically.

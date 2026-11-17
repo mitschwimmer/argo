@@ -7,11 +7,11 @@ metadata:
     environment: dev
 spec:
   parentRefs:
-    - name: public
+    - name: lan
       namespace: edge
-      sectionName: https-walter-dev
+      sectionName: https
   hostnames:
-    - walter-dev.archaic.work
+    - walter.lan.archaic.work
   rules:
     - matches:
         - path:

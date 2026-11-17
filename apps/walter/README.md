@@ -6,7 +6,7 @@ into separate namespaces:
 | | Production | Development |
 |---|---|---|
 | Namespace | `walter-prd` | `walter-dev` |
-| HTTPS origin | `https://walter.archaic.work` | `https://walter-dev.archaic.work` |
+| HTTPS origin | `https://walter.archaic.work` | `https://walter.lan.archaic.work` |
 | Deployment/Service/HTTPRoute | `walter` | `walter` |
 | PVC | `walter-data` | `walter-data` |
 | KanidmOAuth2Client | `walter` | `walter` |

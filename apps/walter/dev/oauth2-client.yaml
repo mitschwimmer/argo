@@ -15,9 +15,9 @@ spec:
     namespace: kanidm
   displayname: Walter (development)
   description: Walter dev chat UI
-  origin: https://walter-dev.archaic.work
+  origin: https://walter.lan.archaic.work
   redirectUrl:
-    - https://walter-dev.archaic.work/auth/callback
+    - https://walter.lan.archaic.work/auth/callback
   public: false
   strictRedirectUrl: true
   # Walter requests openid, profile and groups. Only walter-users may grant them.

@@ -19,7 +19,7 @@ done
 cert="$(mktemp)"
 trap 'rm -f "$cert"' EXIT
 curl --fail --silent --show-error --location \
-  https://seal.archaic.work/v1/cert.pem --output "$cert"
+  https://seal.lan.archaic.work/v1/cert.pem --output "$cert"
 
 for env in prd dev; do
   # Never print the old key or write it to a file. The variable below

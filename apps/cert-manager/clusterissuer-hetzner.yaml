@@ -3,6 +3,7 @@ kind: ClusterIssuer
 metadata:
   name: letsencrypt-hetzner
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "3"
 spec:
   acme:

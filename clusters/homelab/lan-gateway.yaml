@@ -5,6 +5,7 @@ metadata:
   name: lan-gateway
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   description: Manage the LAN Cilium Gateway and wildcard TLS Certificate.
@@ -27,6 +28,7 @@ metadata:
   name: lan-gateway
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "2"
 spec:
   project: lan-gateway

@@ -4,6 +4,7 @@ metadata:
   name: public
   namespace: edge
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     # cert-manager creates and renews the Certificate in the edge namespace.
     cert-manager.io/cluster-issuer: letsencrypt-production
 spec:
@@ -30,7 +31,7 @@ spec:
         certificateRefs:
           - kind: Secret
             name: hello-archaic-work-tls
-      # Application routes select this listener using parentRefs and hostnames.
+      # HTTPRoutes explicitly select this listener via parentRefs and hostname.
       allowedRoutes:
         namespaces:
           from: All
@@ -72,6 +73,18 @@ spec:
         certificateRefs:
           - kind: Secret
             name: walter-archaic-work-tls
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https-walter-dev
+      hostname: walter-dev.archaic.work
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: walter-dev-archaic-work-tls
       allowedRoutes:
         namespaces:
           from: All

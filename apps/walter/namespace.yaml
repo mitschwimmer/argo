@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: walter
-  labels:
-    # Kanidm permits OIDC clients from only this opt-in namespace.
-    kaniop-identity: walter
-  annotations:
-    argocd.argoproj.io/sync-wave: "-1"

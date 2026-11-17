@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - oauth2-client.yaml
+  - pvc.yaml
+  - deployment.yaml
+  - service.yaml
+  - httproute.yaml
+  - strata-sealedsecret.yaml
+# Before merging: seal the Strata key for this namespace and add
+#   - strata-sealedsecret.yaml
+# See apps/walter/README.md. No plaintext credentials belong in Git.

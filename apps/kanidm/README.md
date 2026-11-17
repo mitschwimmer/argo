@@ -35,10 +35,12 @@ public theme repository over HTTPS when rendering this Application.
    does **not** update existing Pods. Confirm Kaniop performs a controlled
    Pod rollout, or schedule an explicit restart.
 
-The current cluster pins **Kaniop v0.22.1** and **Kanidm 1.11.2** while
-the theme repository's visual CI currently targets **Kanidm 1.12.1**.
-That mismatch must be tested or resolved before deployment. Changing Kanidm
-and Kaniop versions is intentionally outside the scope of this theme PR.
+The current cluster pins **Kaniop v0.23.0** and **Kanidm 1.12.1**,
+matching the theme repository's visual CI target as of this update.
+The upstream Heritage v0.3 theme was merged at
+[`b308647`](https://github.com/archaic-work/kanidm-theme/commit/b30864778308da316b311e4b5a6034d00ae520ab),
+and its visual workflow passed. Changing Kanidm and Kaniop versions is
+intentionally outside the scope of this theme PR.
 
 ## Rollback
 

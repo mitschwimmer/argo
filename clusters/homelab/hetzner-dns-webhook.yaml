@@ -5,6 +5,7 @@ metadata:
   name: hetzner-dns-webhook
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   description: Official Hetzner DNS-01 cert-manager webhook.
@@ -42,6 +43,7 @@ metadata:
   name: hetzner-dns-webhook
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "1"
 spec:
   project: hetzner-dns-webhook

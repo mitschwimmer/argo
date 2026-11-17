@@ -1,0 +1,65 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: walter-dev
+  namespace: argocd
+  labels:
+    environment: dev
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Walter (dev) workload within its own namespace.
+  sourceRepos:
+    - https://github.com/mitschwimmer/argo.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: walter-dev
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: ""
+      kind: Service
+    - group: kaniop.rs
+      kind: KanidmOAuth2Client
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+    - group: bitnami.com
+      kind: SealedSecret
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+  name: walter-dev
+  namespace: argocd
+  labels:
+    environment: dev
+spec:
+  project: walter-dev
+  source:
+    repoURL: https://github.com/mitschwimmer/argo.git
+    targetRevision: main
+    path: apps/walter/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: walter-dev
+  syncPolicy:
+    # Cutover verified; reconcile and prune stateless resources automatically.
+    # Persistent resources have Prune=confirm,Delete=confirm in their manifests.
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: true
+      allowEmpty: false
+    syncOptions:
+      - PruneLast=true
+      - SkipDryRunOnMissingResource=true
+      - ServerSideApply=true

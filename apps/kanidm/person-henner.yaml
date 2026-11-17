@@ -1,6 +1,8 @@
 apiVersion: kaniop.rs/v1beta1
 kind: KanidmPersonAccount
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
   name: henner
   namespace: kanidm
 spec:

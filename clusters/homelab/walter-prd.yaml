@@ -2,17 +2,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: walter
+  name: walter-prd
   namespace: argocd
+  labels:
+    environment: prd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: Private chat UI backed by Kanidm OIDC and Strata inference.
+  description: Walter (prd) workload within its own namespace.
   sourceRepos:
     - https://github.com/mitschwimmer/argo.git
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: walter
+      namespace: walter-prd
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
@@ -33,24 +36,30 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: walter
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+  name: walter-prd
   namespace: argocd
+  labels:
+    environment: prd
 spec:
-  project: walter
+  project: walter-prd
   source:
     repoURL: https://github.com/mitschwimmer/argo.git
     targetRevision: main
-    path: apps/walter
+    path: apps/walter/prd
   destination:
     server: https://kubernetes.default.svc
-    namespace: walter
+    namespace: walter-prd
   syncPolicy:
+    # Cutover verified; reconcile and prune stateless resources automatically.
+    # Persistent resources have Prune=confirm,Delete=confirm in their manifests.
     automated:
       enabled: true
       selfHeal: true
-      # Avoid deleting Walter's persistent conversation data by Git pruning.
-      prune: false
+      prune: true
       allowEmpty: false
     syncOptions:
+      - PruneLast=true
       - SkipDryRunOnMissingResource=true
       - ServerSideApply=true

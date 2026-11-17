@@ -1,0 +1,96 @@
+name: Sync Walter develop image
+
+on:
+  # GHCR is in a different repository; poll without cross-repository tokens.
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-walter-develop-image
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Resolve the public GHCR develop image to an immutable digest
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="ghcr.io/mitschwimmer/walter"
+          if ! details="$(docker buildx imagetools inspect "$image:develop" 2>&1)"; then
+            if grep -Eiq 'manifest unknown|not found|name unknown' <<< "$details"; then
+              echo "::notice::The develop image has not been published yet; leaving Git unchanged."
+              exit 0
+            fi
+            echo "$details" >&2
+            exit 1
+          fi
+          digest="$(awk '$1 == "Digest:" { print $2; exit }' <<< "$details")"
+          if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error::Invalid registry digest: $digest" >&2
+            exit 1
+          fi
+          echo "reference=$image@$digest" >> "$GITHUB_OUTPUT"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Update only the walter-dev Deployment image
+        if: steps.resolve.outputs.reference != ''
+        env:
+          WALTER_IMAGE_REFERENCE: ${{ steps.resolve.outputs.reference }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          import pathlib
+          import re
+
+          path = pathlib.Path("apps/walter/dev/deployment.yaml")
+          old = path.read_text(encoding="utf-8")
+          image = os.environ["WALTER_IMAGE_REFERENCE"]
+          if not re.fullmatch(r"ghcr[.]io/mitschwimmer/walter@sha256:[0-9a-f]{64}", image):
+              raise SystemExit("Refusing invalid image reference")
+          # Require exactly one expected Walter image line. Never change prod.
+          pattern = re.compile(
+              r"(?m)^([ \t]+image: )ghcr[.]io/mitschwimmer/walter"
+              r"(?::sha-[0-9a-f]{40}|@sha256:[0-9a-f]{64})[ \t]*$"
+          )
+          new, count = pattern.subn(lambda m: m.group(1) + image, old)
+          if count != 1:
+              raise SystemExit(f"Expected exactly one dev image line, found {count}")
+          if new != old:
+              path.write_text(new, encoding="utf-8")
+              print(f"Updated {path} to {image}")
+          else:
+              print(f"No change: {image} already pinned")
+          PY
+
+      - name: Commit and push updated digest to GitOps main
+        if: steps.resolve.outputs.reference != ''
+        env:
+          WALTER_IMAGE_DIGEST: ${{ steps.resolve.outputs.digest }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          file="apps/walter/dev/deployment.yaml"
+          if git diff --quiet -- "$file"; then
+            echo "Digest is unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$file"
+          git commit -m "ci(walter-dev): deploy $WALTER_IMAGE_DIGEST"
+          # If main advanced after checkout, fail safely. The next run retries.
+          git push origin HEAD:main

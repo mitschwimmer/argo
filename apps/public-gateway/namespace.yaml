@@ -3,4 +3,5 @@ kind: Namespace
 metadata:
   name: edge
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"

@@ -5,6 +5,7 @@ metadata:
   name: cilium-networking
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   description: Manage Cilium LB-IPAM pools and L2 announcement policies, not its Helm release.
@@ -23,6 +24,8 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
   name: cilium-networking
   namespace: argocd
 spec:
@@ -38,6 +41,8 @@ spec:
     automated:
       enabled: true
       selfHeal: true
+      # Deleting IP pools or L2 policies can disconnect the public Gateway.
+      # Require an explicit networking change instead of automatic pruning.
       prune: false
       allowEmpty: false
     syncOptions:

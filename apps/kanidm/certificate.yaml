@@ -4,6 +4,7 @@ metadata:
   name: auth-archaic-work-backend
   namespace: kanidm
   annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "0"
 spec:
   # Backend TLS certificate is distinct from the public Gateway's edge Secret.

@@ -12,11 +12,19 @@ This Argo CD Application owns only a Gateway API HTTPRoute and Kaniop client.
 - Kanidm OIDC issuer: `https://auth.archaic.work/oauth2/openid/argocd`
 - Client: `argocd`, callback `https://argocd.lan.archaic.work/auth/callback`
 - Membership: Kanidm group `argocd-admins` includes `henner`
-- Group claim: `admin` for group members, mapped to Argo CD `role:admin`
+- Observed group claim: `argocd-admins@auth.archaic.work`, which must map to
+  Argo CD `role:admin` in `argocd-rbac-cm`
 
-Kanidm already uses `admin` as a service-account identity; instead of
-creating a conflicting Kanidm group, `argocd-admins` maps to an OIDC
-`admin` group claim. This grants **Argo CD** privileges, not Kanidm admin.
+Kanidm already uses `admin` as a service-account identity. The distinct
+`argocd-admins` group controls **Argo CD** permissions, not Kanidm system
+administration. The initial attempt to map a short `admin` claim failed:
+the actual Argo CD User Info reported the full group SPN instead.
+
+For any **new** OIDC client, first read that application's integration
+documentation using the shared
+[Kanidm OIDC preflight checklist](../kanidm/oidc.md). For this specific
+Argo CD integration, PKCE S256 is enabled by
+`enablePKCEAuthentication: true` in its **Nix-owned** OIDC settings.
 
 Kaniop v0.23.0 creates `argocd/argocd-kanidm-oauth2-credentials` with
 `CLIENT_SECRET`. The `secretTemplate` applies the label
@@ -33,7 +41,8 @@ or committing the secret.
    K3s-owned Argo CD HelmChart with the URL, `server.insecure`, OIDC and
    admin-only RBAC mapping. During the gap between merges, the route
    may not work because the server still expects TLS on its service port.
-3. Confirm Kanidm login as `henner` grants administrator permissions.
+3. Confirm Kanidm login as `henner` grants administrator permissions,
+   and inspect the actual `groups` claim (`argocd-admins@auth.archaic.work`).
    Test that accounts outside `argocd-admins` have no Argo CD rights.
    Retain Argo CD's local administrator account as break-glass access until
    the flow is validated.

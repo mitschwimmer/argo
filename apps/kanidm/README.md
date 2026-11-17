@@ -1,4 +1,12 @@
-# Kanidm theme distribution
+# Kanidm operations
+
+**Before registering any new application as a Kanidm OIDC client**, read
+the application's integration documentation and run the
+[OIDC client preflight checklist](oidc.md). Check PKCE S256 support,
+requested scopes, redirect URIs, group-claim formats and authorization
+defaults for that particular application version.
+
+## Theme distribution
 
 The Kanidm UI theme is maintained in
 [archaic-work/kanidm-theme](https://github.com/archaic-work/kanidm-theme).

@@ -1,5 +1,9 @@
 # Walter environments
 
+For future OIDC clients, read the **new application's** documentation
+and the shared [Kanidm OIDC preflight checklist](../kanidm/oidc.md)
+before registering it. PKCE and group-claim handling vary by application.
+
 The `prd` and `dev` overlays deploy **the same Kubernetes resource names**
 into separate namespaces:
 

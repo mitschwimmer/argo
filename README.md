@@ -2,6 +2,11 @@
 
 Declarative Kubernetes configuration reconciled by Argo CD.
 
+Before registering a new application with Kanidm, **check the application's
+OIDC documentation** against the [client preflight
+checklist](apps/kanidm/oidc.md), especially PKCE support, callback URLs,
+group-claim format and authorization behavior.
+
 ## Ownership
 
 - [nix-config](https://github.com/mitschwimmer/nix-config) owns NixOS hosts,

@@ -5,7 +5,6 @@ metadata:
   labels:
     environment: dev
     app.kubernetes.io/name: walter
-    gateway-access: public
     # Kaniop permits Walter OIDC clients from both opted-in namespaces.
     kaniop-identity: walter
   annotations:

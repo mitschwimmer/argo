@@ -1,0 +1,21 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: lan-redirect-to-https
+  namespace: edge
+spec:
+  parentRefs:
+    - name: lan
+      sectionName: http
+  hostnames:
+    - "*.lan.archaic.work"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301

@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: lan-gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Manage the LAN Cilium Gateway and wildcard TLS Certificate.
+  sourceRepos:
+    - https://github.com/mitschwimmer/argo.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: edge
+  namespaceResourceWhitelist:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+    - group: cert-manager.io
+      kind: Certificate
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: lan-gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: lan-gateway
+  source:
+    repoURL: https://github.com/mitschwimmer/argo.git
+    targetRevision: main
+    path: apps/lan-gateway
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: edge
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: false
+      allowEmpty: false
+    syncOptions:
+      - SkipDryRunOnMissingResource=true

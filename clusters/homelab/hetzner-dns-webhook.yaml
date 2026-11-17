@@ -1,0 +1,72 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: hetzner-dns-webhook
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Official Hetzner DNS-01 cert-manager webhook.
+  sourceRepos:
+    - https://charts.hetzner.cloud
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: cert-manager
+    - server: https://kubernetes.default.svc
+      namespace: kube-system
+  clusterResourceWhitelist:
+    - group: apiregistration.k8s.io
+      kind: APIService
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ServiceAccount
+    - group: ""
+      kind: Service
+    - group: apps
+      kind: Deployment
+    - group: cert-manager.io
+      kind: Issuer
+    - group: cert-manager.io
+      kind: Certificate
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hetzner-dns-webhook
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: hetzner-dns-webhook
+  source:
+    repoURL: https://charts.hetzner.cloud
+    chart: cert-manager-webhook-hetzner
+    targetRevision: 0.9.1
+    helm:
+      releaseName: cert-manager-webhook-hetzner
+      valuesObject:
+        groupName: acme.hetzner.com
+        certManager:
+          namespace: cert-manager
+          serviceAccountName: cert-manager
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: false
+      allowEmpty: false
+    syncOptions:
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

@@ -18,13 +18,10 @@ spec:
       # HTTP-01 challenges and redirects for all public hostnames.
       port: 80
       protocol: HTTP
-      # ACME solver HTTPRoutes may attach from opt-in namespaces.
+      # ACME solver HTTPRoutes may attach from any namespace.
       allowedRoutes:
         namespaces:
-          from: Selector
-          selector:
-            matchLabels:
-              gateway-access: public
+          from: All
     - name: https
       hostname: hello.archaic.work
       port: 443
@@ -34,13 +31,10 @@ spec:
         certificateRefs:
           - kind: Secret
             name: hello-archaic-work-tls
-      # Only opt-in namespaces may attach application routes.
+      # HTTPRoutes explicitly select this listener via parentRefs and hostname.
       allowedRoutes:
         namespaces:
-          from: Selector
-          selector:
-            matchLabels:
-              gateway-access: public
+          from: All
     - name: https-auth
       hostname: auth.archaic.work
       port: 443
@@ -52,10 +46,7 @@ spec:
             name: auth-archaic-work-tls
       allowedRoutes:
         namespaces:
-          from: Selector
-          selector:
-            matchLabels:
-              gateway-access: public
+          from: All
     - name: https-seal
       hostname: seal.archaic.work
       port: 443
@@ -84,10 +75,7 @@ spec:
             name: walter-archaic-work-tls
       allowedRoutes:
         namespaces:
-          from: Selector
-          selector:
-            matchLabels:
-              gateway-access: public
+          from: All
     - name: https-walter-dev
       hostname: walter-dev.archaic.work
       port: 443
@@ -99,7 +87,4 @@ spec:
             name: walter-dev-archaic-work-tls
       allowedRoutes:
         namespaces:
-          from: Selector
-          selector:
-            matchLabels:
-              gateway-access: public
+          from: All

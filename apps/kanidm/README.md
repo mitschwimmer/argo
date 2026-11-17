@@ -1,9 +1,10 @@
 # Kanidm operations
 
-For any new Kanidm OAuth2 client, start with the
-[OIDC integration and troubleshooting checklist](oidc.md). It records two
-recurring pitfalls: applications must send PKCE S256, and application RBAC
-must match the **actual** Kanidm group SPNs in the OIDC token.
+**Before registering any new application as a Kanidm OIDC client**, read
+the application's integration documentation and run the
+[OIDC client preflight checklist](oidc.md). Check PKCE S256 support,
+requested scopes, redirect URIs, group-claim formats and authorization
+defaults for that particular application version.
 
 ## Theme distribution
 

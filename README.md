@@ -2,9 +2,10 @@
 
 Declarative Kubernetes configuration reconciled by Argo CD.
 
-For Kanidm integrations, read the [OIDC preflight and troubleshooting
-checklist](apps/kanidm/oidc.md) before adding another client. It documents
-the required PKCE S256 flow and exact group-claim matching for RBAC.
+Before registering a new application with Kanidm, **check the application's
+OIDC documentation** against the [client preflight
+checklist](apps/kanidm/oidc.md), especially PKCE support, callback URLs,
+group-claim format and authorization behavior.
 
 ## Ownership
 

@@ -20,10 +20,11 @@ Kanidm already uses `admin` as a service-account identity. The distinct
 administration. The initial attempt to map a short `admin` claim failed:
 the actual Argo CD User Info reported the full group SPN instead.
 
-**Before adding another OIDC client**, follow the shared
-[Kanidm OIDC integration checklist](../kanidm/oidc.md). Argo CD v3.6.1
-requires `enablePKCEAuthentication: true` in its **Nix-owned** native OIDC
-settings; without it Kanidm rejects the initial authorization request.
+For any **new** OIDC client, first read that application's integration
+documentation using the shared
+[Kanidm OIDC preflight checklist](../kanidm/oidc.md). For this specific
+Argo CD integration, PKCE S256 is enabled by
+`enablePKCEAuthentication: true` in its **Nix-owned** OIDC settings.
 
 Kaniop v0.23.0 creates `argocd/argocd-kanidm-oauth2-credentials` with
 `CLIENT_SECRET`. The `secretTemplate` applies the label

@@ -22,7 +22,9 @@ spec:
         - openid
         - profile
         - groups
-  # Supply a stable group claim that Argo CD RBAC can map to role:admin.
+  # Do not rely on a short 'admin' RBAC group: the observed standard OIDC
+  # groups claim contains argocd-admins@auth.archaic.work (and group UUIDs).
+  # Match that actual full SPN in Argo CD RBAC; see apps/kanidm/oidc.md.
   claimMap:
     - name: groups
       joinStrategy: array

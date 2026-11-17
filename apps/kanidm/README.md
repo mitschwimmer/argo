@@ -1,4 +1,11 @@
-# Kanidm theme distribution
+# Kanidm operations
+
+For any new Kanidm OAuth2 client, start with the
+[OIDC integration and troubleshooting checklist](oidc.md). It records two
+recurring pitfalls: applications must send PKCE S256, and application RBAC
+must match the **actual** Kanidm group SPNs in the OIDC token.
+
+## Theme distribution
 
 The Kanidm UI theme is maintained in
 [archaic-work/kanidm-theme](https://github.com/archaic-work/kanidm-theme).

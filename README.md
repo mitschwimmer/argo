@@ -2,6 +2,10 @@
 
 Declarative Kubernetes configuration reconciled by Argo CD.
 
+For Kanidm integrations, read the [OIDC preflight and troubleshooting
+checklist](apps/kanidm/oidc.md) before adding another client. It documents
+the required PKCE S256 flow and exact group-claim matching for RBAC.
+
 ## Ownership
 
 - [nix-config](https://github.com/mitschwimmer/nix-config) owns NixOS hosts,

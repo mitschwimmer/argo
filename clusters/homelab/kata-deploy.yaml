@@ -1,0 +1,75 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: kata-deploy
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Install the Kata QEMU runtime on the homelab worker.
+  sourceRepos:
+    - oci://ghcr.io/kata-containers/kata-deploy-charts/kata-deploy
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: kata-system
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: node.k8s.io
+      kind: RuntimeClass
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: ServiceAccount
+    - group: apps
+      kind: DaemonSet
+    - group: batch
+      kind: Job
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kata-deploy
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+spec:
+  project: kata-deploy
+  source:
+    repoURL: oci://ghcr.io/kata-containers/kata-deploy-charts/kata-deploy
+    targetRevision: 4.4.0
+    path: .
+    helm:
+      valuesObject:
+        # Reconcile node installation after the worker or installer restarts.
+        deploymentMode: daemonset
+        k8sDistribution: k3s
+        nodeSelector:
+          kubernetes.io/hostname: k8s-worker-02
+          archaic.work/kata-ready: "true"
+        shims:
+          disableAll: true
+          qemu-runtime-rs:
+            enabled: true
+            runtimeClass:
+              nodeSelector:
+                kubernetes.io/hostname: k8s-worker-02
+                archaic.work/kata-ready: "true"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kata-system
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: false
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true

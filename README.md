@@ -225,6 +225,41 @@ Pod is scheduled. Test a new disposable PVC and Pod, verify that they bind
 and mount correctly, and delete them after testing. Neither Argo CD nor
 the storage class automatically replicates or backs up volume contents.
 
+## Kata Containers hello site
+
+The `kata-deploy` Application installs the QEMU runtime on `k8s-worker-02`
+after the worker is opted in. The existing `hello-world` Deployment requests
+`kata-qemu-runtime-rs`. It keeps its previous replica and ConfigMap during the
+rollout until the replacement passes its HTTP readiness probe.
+
+In the worker's NixOS guest, ensure nested virtualization is available and
+load the KVM and virtio modules before enabling the installer. Persist these
+modules in the worker's `boot.kernelModules` in `nix-config` for reboots.
+Check the devices inside the worker guest:
+
+```sh
+sudo modprobe -a kvm_intel vhost_net vhost_vsock
+test -c /dev/kvm && test -c /dev/vhost-vsock
+```
+
+After those checks pass, opt the worker in from a K3s server. The installer
+restarts the worker's K3s service to register the runtime. Argo CD runs on
+this worker, so schedule that restart for a maintenance window.
+
+```sh
+k3s kubectl label node k8s-worker-02 archaic.work/kata-ready=true
+k3s kubectl wait --for=jsonpath='{.metadata.labels.katacontainers\.io/kata-runtime}'=true \
+  node/k8s-worker-02 --timeout=10m
+k3s kubectl -n kata-system rollout status daemonset/kata-deploy --timeout=10m
+k3s kubectl -n hello-world rollout status deployment/hello-world --timeout=5m
+k3s kubectl -n hello-world get pods -l app=hello-world \
+  -o 'custom-columns=NAME:.metadata.name,NODE:.spec.nodeName,RUNTIME:.spec.runtimeClassName'
+curl -fsS https://hello.archaic.work/ | grep -F 'Hello from Kata Containers'
+```
+
+The Ready hello pod should show `kata-qemu-runtime-rs` on `k8s-worker-02`.
+The same greeting should appear when opening https://hello.archaic.work/.
+
 ## Add a workload
 
 Put its configuration under `apps/<name>/`. Add an Application and scoped

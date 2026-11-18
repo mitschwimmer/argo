@@ -6,10 +6,10 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
 spec:
-  gatewayClassName: cilium
-  addresses:
-    - type: IPAddress
-      value: 192.168.1.202
+  gatewayClassName: envoy
+  infrastructure:
+    annotations:
+      lbipam.cilium.io/ips: "192.168.1.202"
   listeners:
     - name: http
       hostname: "*.lan.archaic.work"

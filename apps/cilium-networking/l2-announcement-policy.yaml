@@ -3,11 +3,12 @@ kind: CiliumL2AnnouncementPolicy
 metadata:
   name: gateway-services
 spec:
-  # Cilium-generated Gateway Services have this label; do not announce
-  # unrelated LoadBalancer or ExternalIP Services.
+  # Announce only Envoy-managed Gateway Services for the edge namespace.
   serviceSelector:
+    matchLabels:
+      gateway.envoyproxy.io/owning-gateway-namespace: edge
     matchExpressions:
-      - key: gateway.networking.k8s.io/gateway-name
+      - key: gateway.envoyproxy.io/owning-gateway-name
         operator: Exists
   # Exclude the small, intentionally tainted cp-02 from north/south traffic.
   # cp-03 is on a different physical host from cp-01 and worker-02.

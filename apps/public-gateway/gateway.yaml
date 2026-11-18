@@ -8,11 +8,11 @@ metadata:
     # cert-manager creates and renews the Certificate in the edge namespace.
     cert-manager.io/cluster-issuer: letsencrypt-production
 spec:
-  gatewayClassName: cilium
+  gatewayClassName: envoy
   # Stable LAN destination for home-router TCP 80/443 forwarding.
-  addresses:
-    - type: IPAddress
-      value: 192.168.1.201
+  infrastructure:
+    annotations:
+      lbipam.cilium.io/ips: "192.168.1.201"
   listeners:
     - name: http
       # HTTP-01 challenges and redirects for all public hostnames.

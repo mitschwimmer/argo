@@ -17,4 +17,5 @@ resources:
   - hetzner-dns-webhook.yaml
   - lan-gateway.yaml
   - public-gateway.yaml
+  - kata-deploy.yaml
   - hello-world.yaml

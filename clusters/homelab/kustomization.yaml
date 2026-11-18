@@ -11,6 +11,7 @@ resources:
   - walter-prd.yaml
   - walter-dev.yaml
   - gateway-api.yaml
+  - envoy-gateway.yaml
   - cilium-networking.yaml
   - cert-manager.yaml
   - hetzner-dns-webhook.yaml

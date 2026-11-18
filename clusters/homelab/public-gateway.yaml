@@ -8,7 +8,7 @@ metadata:
     argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: Manage the fixed-IP public Cilium Gateway, HTTPS and HTTP redirects.
+  description: Manage the fixed-IP public Envoy Gateway, HTTPS and HTTP redirects.
   sourceRepos:
     - https://github.com/mitschwimmer/argo.git
   destinations:
@@ -28,6 +28,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+    argocd.argoproj.io/sync-wave: "2"
   name: public-gateway
   namespace: argocd
 spec:

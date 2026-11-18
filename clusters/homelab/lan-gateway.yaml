@@ -8,7 +8,7 @@ metadata:
     argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: Manage the LAN Cilium Gateway and wildcard TLS Certificate.
+  description: Manage the LAN Envoy Gateway and wildcard TLS Certificate.
   sourceRepos:
     - https://github.com/mitschwimmer/argo.git
   destinations:

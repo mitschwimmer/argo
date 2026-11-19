@@ -2,11 +2,13 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - namespace.yaml
+  # Keep the previous ReplicaSet's volume available until the Kata pod is Ready.
+  - configmap.yaml
   - deployment.yaml
   - service.yaml
   - httproute.yaml
 configMapGenerator:
-  - name: hello-world
+  - name: hello-world-kata
     namespace: hello-world
     files:
       - index.html

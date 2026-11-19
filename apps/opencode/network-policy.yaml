@@ -1,0 +1,63 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: opencode
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  endpointSelector:
+    matchLabels:
+      app: opencode
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+            k8s:gateway.envoyproxy.io/owning-gateway-namespace: edge
+            k8s:gateway.envoyproxy.io/owning-gateway-name: lan
+      toPorts:
+        - ports:
+            - port: "4096"
+              protocol: TCP
+    - fromEntities: [host]
+      toPorts:
+        - ports:
+            - port: "4096"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app: strata-proxy
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: strata-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  endpointSelector:
+    matchLabels:
+      app: strata-proxy
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app: opencode
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    - fromEntities: [host]
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+  egress:
+    - toCIDR: [192.168.1.28/32]
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

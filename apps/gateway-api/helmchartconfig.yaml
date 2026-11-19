@@ -17,6 +17,9 @@ spec:
     # Cilium keeps its standalone Envoy for CNI L7 policy support.
     envoy:
       enabled: true
+    # Kata guests use the veth service load balancer rather than the pod socket hook.
+    socketLB:
+      hostNamespaceOnly: true
     l2announcements:
       enabled: true
     # All K3s MicroVMs use a bridged interface named lan0.

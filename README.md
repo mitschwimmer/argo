@@ -229,17 +229,16 @@ the storage class automatically replicates or backs up volume contents.
 
 The `kata-deploy` Application installs the QEMU runtime on `k8s-worker-02`
 after the worker is opted in. The existing `hello-world` Deployment requests
-`kata-qemu-runtime-rs`. It keeps its previous replica and ConfigMap during the
-rollout until the replacement passes its HTTP readiness probe.
+`kata-qemu-runtime-rs`. The rolling update keeps the previous replica until
+the replacement passes its HTTP readiness probe. Keep the legacy
+`ConfigMap/hello-world` in Git while any serving Pod references it.
 
-In the worker's NixOS guest, ensure nested virtualization is available and
-load the KVM and virtio modules before enabling the installer. Persist these
-modules in the worker's `boot.kernelModules` in `nix-config` for reboots.
+Activate the worker runner and check nested virtualization as described in
+[the `nix-config` runbook](https://github.com/mitschwimmer/nix-config/blob/main/docs/operations.md#prepare-the-kata-worker).
 Check the devices inside the worker guest:
 
 ```sh
-sudo modprobe -a kvm_intel vhost_net vhost_vsock
-test -c /dev/kvm && test -c /dev/vhost-vsock
+test -c /dev/kvm && test -c /dev/vhost-net && test -c /dev/vhost-vsock
 ```
 
 After those checks pass, opt the worker in from a K3s server. The installer

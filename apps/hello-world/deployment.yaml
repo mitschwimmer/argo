@@ -70,7 +70,7 @@ spec:
       volumes:
         - name: site
           configMap:
-            name: hello-world
+            name: hello-world-kata
         - name: run
           emptyDir:
             medium: Memory

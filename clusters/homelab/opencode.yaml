@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: opencode
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: LAN-only Kata coding agent with Strata inference.
+  sourceRepos:
+    - https://github.com/mitschwimmer/argo.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: opencode
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Service
+    - group: cilium.io
+      kind: CiliumNetworkPolicy
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+    - group: bitnami.com
+      kind: SealedSecret
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opencode
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+spec:
+  project: opencode
+  source:
+    repoURL: https://github.com/mitschwimmer/argo.git
+    targetRevision: main
+    path: apps/opencode
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: opencode
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - PruneLast=true
+      - ServerSideApply=true

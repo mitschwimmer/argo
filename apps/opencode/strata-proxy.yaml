@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: strata-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  selector:
+    app: strata-proxy
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: strata-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: strata-proxy
+  template:
+    metadata:
+      labels:
+        app: strata-proxy
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: envoy
+          image: docker.io/envoyproxy/envoy:distroless-v1.40.2@sha256:09ca6f2140a61ad8df11779a4a30d52b48433d444466328494f9188c9c35eded
+          command: [envoy]
+          args: ["-c", /etc/strata-envoy/envoy.yaml, --disable-hot-restart, --concurrency, "1"]
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            tcpSocket:
+              port: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/strata-envoy
+              readOnly: true
+            - name: credentials
+              mountPath: /run/strata
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: strata-envoy
+        - name: credentials
+          secret:
+            secretName: opencode-strata
+            defaultMode: 0440

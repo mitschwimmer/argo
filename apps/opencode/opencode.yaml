@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opencode
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: opencode
+  template:
+    metadata:
+      labels:
+        app: opencode
+    spec:
+      runtimeClassName: kata-qemu-runtime-rs
+      automountServiceAccountToken: false
+      # Resolve the Strata proxy from its Service environment variable.
+      enableServiceLinks: true
+      dnsPolicy: None
+      dnsConfig:
+        nameservers: [127.0.0.1]
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: opencode
+          image: ghcr.io/anomalyco/opencode:2.3.2@sha256:be07cc4afd6d668d91b77accf1bc4338c87b39fbacc0a61666eb003781015f5a
+          args: [serve, --hostname, "0.0.0.0", --port, "4096"]
+          workingDir: /workspace
+          ports:
+            - name: http
+              containerPort: 4096
+          env:
+            - name: HOME
+              value: /workspace
+            - name: SHELL
+              value: /bin/sh
+            - name: OPENCODE_DISABLE_MODELS_FETCH
+              value: "true"
+            - name: OPENCODE_CONFIG_CONTENT
+              value: |
+                {
+                  "model": "strata/qwen3.8-flash-next-iq3_s",
+                  "providers": {
+                    "strata": {
+                      "name": "Strata",
+                      "package": "@opencode/ai/providers/openai-compatible",
+                      "settings": {
+                        "baseURL": "http://$(STRATA_PROXY_SERVICE_HOST):8080/v1"
+                      },
+                      "models": {
+                        "qwen3.8-flash-next-iq3_s": {
+                          "name": "Qwen 3.8 Flash Next"
+                        }
+                      }
+                    }
+                  }
+                }
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+              ephemeral-storage: 2Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: workspace
+          emptyDir:
+            sizeLimit: 1Gi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opencode
+spec:
+  selector:
+    app: opencode
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

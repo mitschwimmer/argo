@@ -19,3 +19,4 @@ resources:
   - public-gateway.yaml
   - kata-deploy.yaml
   - hello-world.yaml
+  - opencode.yaml

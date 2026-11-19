@@ -1,0 +1,26 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: coding-agent-poc-gateway
+  namespace: __ENVOY_NAMESPACE__
+  labels:
+    app.kubernetes.io/part-of: coding-agent-poc
+spec:
+  endpointSelector:
+    matchLabels:
+      gateway.envoyproxy.io/owning-gateway-namespace: coding-agent-poc
+      gateway.envoyproxy.io/owning-gateway-name: task
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: coding-agent-poc
+            k8s:app: poc-opencode
+      toPorts:
+        - ports:
+            - port: "8443"
+              protocol: TCP
+    - fromEntities: [host]
+      toPorts:
+        - ports:
+            - port: "19003"
+              protocol: TCP
